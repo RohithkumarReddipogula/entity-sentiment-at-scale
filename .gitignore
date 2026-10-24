@@ -15,3 +15,6 @@ __pycache__/
 
 # os
 .DS_Store
+
+# llm response cache (contains headline text)
+results/cache/

@@ -1,0 +1,155 @@
+{
+  "run_id": "a_llm_dev_eval_20261024T112854Z",
+  "timestamp": "2026-10-24T11:28:54+00:00",
+  "model_id": "A",
+  "model_name": "LLM baseline (zero-shot)",
+  "purpose": "eval",
+  "split": "dev",
+  "n_headlines": 1613,
+  "n_entities": 2150,
+  "invalid_headlines": 0,
+  "git": {
+    "commit": "7d6b03a2c6321fdd7b51cd04aa998c69186155eb",
+    "dirty": true
+  },
+  "config": {
+    "llm": "anthropic/claude-haiku-5.5",
+    "provider": "OpenRouter",
+    "prompt_version": "v1",
+    "prompt_sha256": "5a39adbb3a16eb6d4a7c5eaeef1f972ff7b4ca902e6931de092eb3541b6d89c8",
+    "reasoning": "disabled",
+    "temperature": "not supported by the model on OpenRouter (provider default)",
+    "structured_output": "json_schema, strict",
+    "max_tokens": 400,
+    "invalid_answer_retries": 2,
+    "concurrency": 8,
+    "budget_usd": 2.0,
+    "limit": null,
+    "sample_seed": null,
+    "listed_price_usd_per_m_tokens": {
+      "input": 0.09999999999999999,
+      "output": 0.5
+    }
+  },
+  "seed": {
+    "bootstrap": 0,
+    "n_bootstrap": 10000
+  },
+  "metrics": {
+    "all": {
+      "macro_f1": 0.8346591315597509,
+      "accuracy": 0.8334883720930233,
+      "n_entities": 2150,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8269230769230769,
+          "recall": 0.9052631578947369,
+          "f1": 0.864321608040201,
+          "support": 760
+        },
+        "negative": {
+          "precision": 0.8218298555377207,
+          "recall": 0.8966725043782837,
+          "f1": 0.8576214405360134,
+          "support": 571
+        },
+        "neutral": {
+          "precision": 0.8517985611510791,
+          "recall": 0.7228327228327228,
+          "f1": 0.7820343461030383,
+          "support": 819
+        }
+      },
+      "n_headlines": 1613,
+      "macro_f1_ci95": [
+        0.8175250433757446,
+        0.8517159881515611
+      ]
+    },
+    "multi_entity": {
+      "macro_f1": 0.8371228507377491,
+      "accuracy": 0.8357588357588358,
+      "n_entities": 962,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.835195530726257,
+          "recall": 0.8978978978978979,
+          "f1": 0.8654124457308249,
+          "support": 333
+        },
+        "negative": {
+          "precision": 0.7958333333333333,
+          "recall": 0.8842592592592593,
+          "f1": 0.8377192982456141,
+          "support": 216
+        },
+        "neutral": {
+          "precision": 0.8626373626373627,
+          "recall": 0.7602905569007264,
+          "f1": 0.8082368082368082,
+          "support": 413
+        }
+      },
+      "n_headlines": 425,
+      "macro_f1_ci95": [
+        0.8066522072382439,
+        0.8654383395097439
+      ]
+    },
+    "mixed_label": {
+      "macro_f1": 0.8562865616002394,
+      "accuracy": 0.8547215496368039,
+      "n_entities": 413,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.9044117647058824,
+          "recall": 0.8601398601398601,
+          "f1": 0.8817204301075269,
+          "support": 143
+        },
+        "negative": {
+          "precision": 0.8214285714285714,
+          "recall": 0.8932038834951457,
+          "f1": 0.8558139534883721,
+          "support": 103
+        },
+        "neutral": {
+          "precision": 0.8363636363636363,
+          "recall": 0.8263473053892215,
+          "f1": 0.8313253012048193,
+          "support": 167
+        }
+      },
+      "n_headlines": 184,
+      "macro_f1_ci95": [
+        0.8183424442602938,
+        0.8914889241011148
+      ]
+    }
+  },
+  "cost": {
+    "total_usd": 0.1304191,
+    "per_1000_headlines_usd": 0.08085499070055797,
+    "listed_price_total_usd": 0.13041909999999998,
+    "reported_vs_listed_ratio": 1.0000000000000002,
+    "missing_reported_cost_calls": 0,
+    "input_tokens": 1064196,
+    "output_tokens": 47999,
+    "reasoning_tokens": 0
+  },
+  "speed": {
+    "api_calls": 1613,
+    "http_requests": 1613,
+    "passes_per_1000_headlines": 1000.0,
+    "latency_median_s": 1.111775999999736,
+    "latency_p95_s": 1.6697217168000862,
+    "latency_note": "network round trip per headline incl. invalid-answer retries; not comparable to local CPU latency of models B and C"
+  },
+  "served_models": [
+    "anthropic/claude-haiku-5.5"
+  ],
+  "cached_headlines": 9
+}

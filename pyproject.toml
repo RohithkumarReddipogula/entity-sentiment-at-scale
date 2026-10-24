@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Entity-level sentiment: per-entity vs single-pass encoders vs an LLM baseline"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
     "pandas>=2.2",
+    "pydantic>=2.14.1",
+    "python-dotenv>=1.2.4",
     "scikit-learn>=1.5",
 ]
 

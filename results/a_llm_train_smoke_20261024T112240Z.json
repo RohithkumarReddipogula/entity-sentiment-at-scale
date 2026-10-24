@@ -1,0 +1,125 @@
+{
+  "run_id": "a_llm_train_smoke_20261024T112240Z",
+  "timestamp": "2026-10-24T11:22:40+00:00",
+  "model_id": "A",
+  "model_name": "LLM baseline (zero-shot)",
+  "purpose": "smoke",
+  "split": "train",
+  "n_headlines": 20,
+  "n_entities": 29,
+  "invalid_headlines": 0,
+  "git": {
+    "commit": "7d6b03a2c6321fdd7b51cd04aa998c69186155eb",
+    "dirty": true
+  },
+  "config": {
+    "llm": "anthropic/claude-haiku-5.5",
+    "provider": "OpenRouter",
+    "prompt_version": "v1",
+    "prompt_sha256": "5a39adbb3a16eb6d4a7c5eaeef1f972ff7b4ca902e6931de092eb3541b6d89c8",
+    "reasoning": "disabled",
+    "temperature": "not supported by the model on OpenRouter (provider default)",
+    "structured_output": "json_schema, strict",
+    "max_tokens": 400,
+    "invalid_answer_retries": 2,
+    "concurrency": 8,
+    "budget_usd": 0.1,
+    "limit": 20,
+    "sample_seed": 0,
+    "listed_price_usd_per_m_tokens": {
+      "input": 0.09999999999999999,
+      "output": 0.5
+    }
+  },
+  "seed": {
+    "bootstrap": 0,
+    "n_bootstrap": 10000
+  },
+  "metrics": {
+    "all": {
+      "macro_f1": 0.9249762583095916,
+      "accuracy": 0.9310344827586207,
+      "n_entities": 29,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 1.0,
+          "recall": 0.8571428571428571,
+          "f1": 0.9230769230769231,
+          "support": 7
+        },
+        "negative": {
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8888888888888888,
+          "support": 8
+        },
+        "neutral": {
+          "precision": 1.0,
+          "recall": 0.9285714285714286,
+          "f1": 0.9629629629629629,
+          "support": 14
+        }
+      },
+      "n_headlines": 20,
+      "macro_f1_ci95": [
+        0.8041393151463484,
+        1.0
+      ]
+    },
+    "multi_entity": {
+      "macro_f1": 0.8253968253968255,
+      "accuracy": 0.8823529411764706,
+      "n_entities": 17,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571428571428571,
+          "support": 4
+        },
+        "negative": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "support": 2
+        },
+        "neutral": {
+          "precision": 1.0,
+          "recall": 0.9090909090909091,
+          "f1": 0.9523809523809523,
+          "support": 11
+        }
+      },
+      "n_headlines": 8,
+      "macro_f1_ci95": [
+        0.4780555555555561,
+        1.0
+      ]
+    },
+    "mixed_label": null
+  },
+  "cost": {
+    "total_usd": 0.0016423,
+    "per_1000_headlines_usd": 0.082115,
+    "listed_price_total_usd": 0.0016423,
+    "reported_vs_listed_ratio": 1.0,
+    "missing_reported_cost_calls": 0,
+    "input_tokens": 13238,
+    "output_tokens": 637,
+    "reasoning_tokens": 0
+  },
+  "speed": {
+    "api_calls": 20,
+    "http_requests": 20,
+    "passes_per_1000_headlines": 1000.0,
+    "latency_median_s": 1.6102925420000247,
+    "latency_p95_s": 1.821325377399808,
+    "latency_note": "network round trip per headline incl. invalid-answer retries; not comparable to local CPU latency of models B and C"
+  },
+  "served_models": [
+    "anthropic/claude-haiku-5.5"
+  ],
+  "cached_headlines": 20
+}

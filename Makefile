@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results
 
 setup:
 	uv sync
@@ -20,3 +20,12 @@ test:
 	uv run pytest -q
 
 check: lint typecheck test
+
+run-a-smoke:
+	uv run python scripts/run_llm.py --split train --limit 20 --purpose smoke
+
+run-a:
+	uv run python scripts/run_llm.py --split dev
+
+results:
+	uv run python scripts/make_results.py
