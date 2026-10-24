@@ -1,0 +1,82 @@
+{
+  "dataset": "SEntFiN 1.0",
+  "source_url": "https://raw.githubusercontent.com/pyRis/SEntFiN/eba43610fe3cb57a3e5773cd6c037da1f8992ad5/SEntFiN.csv",
+  "source_commit": "eba43610fe3cb57a3e5773cd6c037da1f8992ad5",
+  "raw_sha256": "570af7ba58f724f3fcc414dd5ba80da5b1a3b342134d76c6ebdf53a32c54a92f",
+  "seed": 42,
+  "fractions": {
+    "train": 0.7,
+    "dev": 0.15,
+    "test": 0.15
+  },
+  "unit": "headline; identical normalized headlines kept in one split",
+  "stratify_by": "label of single-label headlines x (1 vs 2+ entities); 'mixed' otherwise",
+  "files": {
+    "train": {
+      "count": 7529,
+      "sha256": "90c44d2dcccadfb253d989ae41cf3ac47898f269228aca5339c2e51d0db07c01"
+    },
+    "dev": {
+      "count": 1613,
+      "sha256": "339473710bb9edf1cfd0f4d9591258f9d7fd047ea9fa58267cae24bc1f69ffb7"
+    },
+    "test": {
+      "count": 1611,
+      "sha256": "721d1d449fdd86eb2114978696e8853f2eec5b7cd61dfc2817df3444f1f3ade2"
+    }
+  },
+  "stats": {
+    "All": {
+      "headlines": 10753,
+      "entities": 14405,
+      "labels": {
+        "positive": 5074,
+        "negative": 3814,
+        "neutral": 5517
+      },
+      "multi_entity_headlines": 2847,
+      "mixed_label_headlines": 1233,
+      "entities_in_multi_headlines": 6499
+    },
+    "Train": {
+      "headlines": 7529,
+      "entities": 10098,
+      "labels": {
+        "positive": 3544,
+        "negative": 2662,
+        "neutral": 3892
+      },
+      "multi_entity_headlines": 1996,
+      "mixed_label_headlines": 865,
+      "entities_in_multi_headlines": 4565
+    },
+    "Dev": {
+      "headlines": 1613,
+      "entities": 2150,
+      "labels": {
+        "positive": 760,
+        "negative": 571,
+        "neutral": 819
+      },
+      "multi_entity_headlines": 425,
+      "mixed_label_headlines": 184,
+      "entities_in_multi_headlines": 962
+    },
+    "Test": {
+      "headlines": 1611,
+      "entities": 2157,
+      "labels": {
+        "positive": 770,
+        "negative": 581,
+        "neutral": 806
+      },
+      "multi_entity_headlines": 426,
+      "mixed_label_headlines": 184,
+      "entities_in_multi_headlines": 972
+    }
+  },
+  "cleaning": {
+    "repaired": 19,
+    "parsed_with_fallback": 13
+  }
+}

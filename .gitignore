@@ -1,0 +1,17 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# data
+data/raw/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# os
+.DS_Store
