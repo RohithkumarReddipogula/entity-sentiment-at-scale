@@ -204,27 +204,30 @@ def make_loader(
     shuffle: bool,
     seed: int,
 ) -> DataLoader[Instance]:
-    def collate(batch: list[Instance]) -> dict[str, torch.Tensor]:
-        enc = tokenizer(
-            [b.text for b in batch],
-            padding=True,
-            truncation=True,
-            max_length=max_length,
-            return_tensors="pt",
-        )
-        return {
-            "input_ids": enc["input_ids"],
-            "attention_mask": enc["attention_mask"],
-            "labels": torch.tensor([b.label for b in batch]),
-        }
-
     return DataLoader(
         cast("Dataset[Instance]", list(instances)),  # a list is a valid map-style dataset
         batch_size=batch_size,
         shuffle=shuffle,
-        collate_fn=collate,
+        collate_fn=lambda b: collate_per_entity(b, tokenizer, max_length),
         generator=torch.Generator().manual_seed(seed),
     )
+
+
+def collate_per_entity(
+    batch: Sequence[Instance], tokenizer: Any, max_length: int
+) -> dict[str, torch.Tensor]:
+    enc = tokenizer(
+        [b.text for b in batch],
+        padding=True,
+        truncation=True,
+        max_length=max_length,
+        return_tensors="pt",
+    )
+    return {
+        "input_ids": enc["input_ids"],
+        "attention_mask": enc["attention_mask"],
+        "labels": torch.tensor([b.label for b in batch]),
+    }
 
 
 def make_loader_for(

@@ -198,3 +198,48 @@ inference; the cause has not been profiled.
   tests give 77 passed, 27 skipped (all the intended data, cache and checkpoint skips), 0 failed.
   No downloads.
 - M4 done.
+
+## 2026-10-25 · M5 Speed and cost benchmark
+
+### "Cheaper per headline" rule (fixed before the benchmark is built or run, before M6)
+
+- Primary cost measure: **process CPU time per 1,000 headlines in batched mode** (32 headlines
+  per call; for B, all their entities in one call), with **4 torch threads**. Measured with
+  `time.process_time()`, so time on all threads counts. Seed-1 checkpoints of B and C, all 1,613
+  dev headlines, float32, inference mode, offline. Each measurement runs in its own fresh process,
+  interleaved B, C, B, C, B, C, with 50 warm-up headlines that are not timed.
+- **C is "cheaper per headline" only if its CPU time per 1,000 headlines is lower than B's in
+  every one of the 3 interleaved repetitions.** Otherwise it is not cheaper.
+- Also reported, but not part of the decision: forward passes per 1,000 headlines, batch-1
+  end-to-end latency (median, p95, and by entity count) at 4 and 1 threads, wall-clock throughput
+  at 4 and 1 threads, and model A's M1 numbers as a non-comparable network reference.
+- No USD figure for B and C (owner's decision); SPEC.md asks for USD only for model A.
+- Conditions: the owner keeps the Mac plugged in and idle during the run. The power state is
+  recorded with the results.
+
+### Results (`results/bench/m5_bench_20261025T163921Z.json`, Apple M5 on AC power)
+
+| Model | Threads | Passes / 1k | Latency median / p95 | By entities 1 / 2 / 3+ | Headlines/s (batch 32) | CPU s / 1k headlines |
+|---|---:|---:|---:|---:|---:|---:|
+| B | 4 | 1,333 | 5.67 / 8.16 ms | 5.62 / 7.40 / 10.01 ms | 366 | 3.78 |
+| C | 4 | 1,000 | 5.78 / 5.96 ms | 5.78 / 5.79 / 5.76 ms | 565 | 2.40 |
+| B | 1 | 1,333 | 5.59 / 8.08 ms | 5.55 / 7.54 / 10.11 ms | 320 | 3.12 |
+| C | 1 | 1,000 | 5.56 / 5.71 ms | 5.55 / 5.58 / 5.58 ms | 496 | 2.02 |
+
+- **Verdict under the rule: C is cheaper per headline.** 4-thread CPU s / 1k headlines by
+  repetition: B 3.79 / 3.77 / 3.78, C 2.40 / 2.40 / 2.40. Repetitions agree within 1%.
+- C uses about 37% less CPU per headline (about 35% at 1 thread) and has about 54% more batched
+  throughput. That is more than the 25% fewer forward passes alone: B's inputs are also a few tokens
+  longer (markers), and it batches more sequences per call. Meltwater reported 45.5%; our headlines
+  carry fewer entities (1.33 on average).
+- Batch-1 latency is equal for single-entity headlines. B grows with entity count (7.4 ms at 2,
+  10.0 ms at 3+) while C stays at about 5.8 ms; C's p95 is 5.96 ms against B's 8.16 ms.
+- At these short inputs, 1 thread is as fast as 4 and uses less CPU. For serving (M7), several
+  single-thread workers beat one 4-thread worker.
+- 0 prediction mismatches in all 12 runs (batch 1 and batch 32): the benchmark measured exactly the
+  models whose dev results were reported.
+- This settles only the "cheaper" half of the SPEC.md decision rule. The accuracy half is decided
+  on test in M6.
+- The benchmark record says `git.commit` `91331a8` with `dirty: true`, because the M5 code was not
+  yet committed. The commit that adds the record contains exactly the code that produced it.
+- M5 done.

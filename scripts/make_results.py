@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import statistics
 from typing import Any
 
 from entsent.data import REPO_ROOT
-from entsent.results import load_results
+from entsent.results import RESULTS_DIR, load_results
 
 RESULTS_MD = REPO_ROOT / "RESULTS.md"
 
@@ -91,6 +92,59 @@ def multi_seed(records: list[dict[str, Any]], purpose: str, title: str, note: st
     return [*lines, ""]
 
 
+def speed_section() -> list[str]:
+    """M5: the latest benchmark in results/bench/, plus model A's M1 numbers for reference."""
+    files = sorted((RESULTS_DIR / "bench").glob("m5_bench_*.json"))
+    if not files:
+        return []
+    bench = json.loads(files[-1].read_text())
+    s, d, env = bench["summary"], bench["decision"], bench["environment"]
+    lines = [
+        "## Speed and cost (M5, CPU, dev headlines)",
+        "",
+        f"`{bench['run_id']}`: {env['chip']}, torch {env['torch']}, seed-1 checkpoints, "
+        f"{bench['config']['reps']} interleaved repetitions (medians shown), "
+        "fresh process per measurement.",
+        "",
+        "| Model | Threads | Passes / 1k headlines | Latency median / p95 (ms) | "
+        "Median by entities 1 / 2 / 3+ (ms) | Headlines / s (batch 32) | "
+        "CPU s / 1k headlines | Prediction mismatches |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for key, m in s.items():
+        model, threads = key.split("_threads")
+        by = m["latency_median_ms_by_entities"]
+        cells = [
+            model,
+            threads,
+            f"{m['passes_per_1000_headlines']:,.0f}",
+            f"{m['latency_median_ms']:.2f} / {m['latency_p95_ms']:.2f}",
+            f"{by['1']:.2f} / {by['2']:.2f} / {by['3+']:.2f}",
+            f"{m['headlines_per_s']:.0f}",
+            f"{m['cpu_s_per_1000_headlines']:.2f}",
+            str(m["mismatches_total"]),
+        ]
+        lines.append("| " + " | ".join(cells) + " |")
+    a = [r for r in load_results() if r["model_id"] == "A" and r["purpose"] == "eval"]
+    if a:
+        sp, cost = a[-1]["speed"], a[-1]["cost"]
+        lines.append(
+            f"| A (reference) | network | {sp['passes_per_1000_headlines']:,.0f} | "
+            f"{sp['latency_median_s'] * 1000:.0f} / {sp['latency_p95_s'] * 1000:.0f} | | | | "
+            f"${cost['per_1000_headlines_usd']:.3f} / 1k headlines |"
+        )
+    verdict = "yes" if d["c_is_cheaper"] else "no"
+    lines += [
+        "",
+        f"**C cheaper per headline (LOG.md rule): {verdict}.** 4-thread CPU s / 1k headlines "
+        f"by repetition: B {', '.join(f'{v:.2f}' for v in d['b_cpu_s_per_1000_by_rep'])}; "
+        f"C {', '.join(f'{v:.2f}' for v in d['c_cpu_s_per_1000_by_rep'])}.",
+        "Model A's latency is a network round trip and not comparable; its USD cost is from M1.",
+        "",
+    ]
+    return lines
+
+
 def main() -> None:
     records = load_results()
     header = (
@@ -108,6 +162,7 @@ def main() -> None:
         "LLM latency is a network round trip and is not comparable to local CPU latency.",
         "",
         *(line for section in SECTIONS for line in multi_seed(records, *section)),
+        *speed_section(),
         "## All runs",
         "",
         header,

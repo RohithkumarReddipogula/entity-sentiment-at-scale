@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment bench
 
 SEEDS ?= 1 2 3
 
@@ -55,6 +55,11 @@ train-c:
 
 alignment:
 	uv run python scripts/check_alignment.py
+
+# M5: CPU speed and cost of B and C (seed 1), interleaved fresh processes, dev headlines.
+bench:
+	uv run python scripts/bench.py
+	uv run python scripts/make_results.py
 
 # Every run is attempted; RESULTS.md is regenerated even if one fails, then make fails.
 check-encoders:

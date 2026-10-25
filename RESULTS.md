@@ -23,6 +23,21 @@ Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean d
 | `b_deberta` | microsoft/deberta-v3-small | 1, 2, 3 | 0.891, 0.891, 0.892 | 0.892 | 0.001 | 3, 3, 2 | 6.1 |
 | `b_distilroberta` | distilbert/distilroberta-base | 1, 2, 3 | 0.876, 0.874, 0.881 | 0.877 | 0.003 | 3, 2, 2 | 3.6 |
 
+## Speed and cost (M5, CPU, dev headlines)
+
+`m5_bench_20261025T163921Z`: Apple M5, torch 2.14.1, seed-1 checkpoints, 3 interleaved repetitions (medians shown), fresh process per measurement.
+
+| Model | Threads | Passes / 1k headlines | Latency median / p95 (ms) | Median by entities 1 / 2 / 3+ (ms) | Headlines / s (batch 32) | CPU s / 1k headlines | Prediction mismatches |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| B | 4 | 1,333 | 5.67 / 8.16 | 5.62 / 7.40 / 10.01 | 366 | 3.78 | 0 |
+| C | 4 | 1,000 | 5.78 / 5.96 | 5.78 / 5.79 / 5.76 | 565 | 2.40 | 0 |
+| B | 1 | 1,333 | 5.59 / 8.08 | 5.55 / 7.54 / 10.11 | 320 | 3.12 | 0 |
+| C | 1 | 1,000 | 5.56 / 5.71 | 5.55 / 5.58 / 5.58 | 496 | 2.02 | 0 |
+| A (reference) | network | 1,000 | 1112 / 1670 | | | | $0.081 / 1k headlines |
+
+**C cheaper per headline (LOG.md rule): yes.** 4-thread CPU s / 1k headlines by repetition: B 3.79, 3.77, 3.78; C 2.40, 2.40, 2.40.
+Model A's latency is a network round trip and not comparable; its USD cost is from M1.
+
 ## All runs
 
 | Run | Model | Purpose | Split | Headlines / entities | Macro-F1 [95% CI] | Accuracy | Macro-F1, 2+ entities | Macro-F1, mixed labels | Invalid | Passes / 1k | Latency median / p95 (s) | USD / 1k headlines |
