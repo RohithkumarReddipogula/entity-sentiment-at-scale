@@ -1,0 +1,20 @@
+# M3 final model B (per-entity encoder): the encoder chosen in M2, same settings as the
+# encoder check, checkpoints saved. Trained with seeds 1, 2, 3 on CPU (deterministic).
+# Model C (M4) must use exactly these settings; only `architecture` and `name` may differ.
+name: b_final
+architecture: per_entity
+encoder:
+  name: distilbert/distilroberta-base  # Apache-2.0
+  revision: fb53ab8802853c8e4fbdbcd0529f21fc6f459b2b
+max_length: 128
+optim:
+  epochs: 3
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  dropout: 0.1
+seed: 1
+device: cpu
+save_checkpoint: true

@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b
 
 SEEDS ?= 1 2 3
 
@@ -33,6 +33,16 @@ results:
 	uv run python scripts/make_results.py
 
 # M2: model B with both candidate encoders, 3 seeds each, dev only.
+# M3: final model B, seeds 1-3, deterministic on CPU, checkpoints saved (dev only).
+train-b:
+	rc=0; \
+	for seed in $(SEEDS); do \
+		uv run python scripts/train.py --config configs/b_final.yaml --seed $$seed \
+			--purpose final || { echo "FAILED: b_final seed $$seed"; rc=1; }; \
+	done; \
+	uv run python scripts/make_results.py; \
+	exit $$rc
+
 # Every run is attempted; RESULTS.md is regenerated even if one fails, then make fails.
 check-encoders:
 	status=0; \

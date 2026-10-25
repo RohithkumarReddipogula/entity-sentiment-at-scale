@@ -40,19 +40,34 @@ def row(r: dict[str, Any]) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
-def encoder_check(records: list[dict[str, Any]]) -> list[str]:
-    """M2: mean and spread of dev macro-F1 over seeds, per encoder config."""
+SECTIONS = [
+    (
+        "final",
+        "Final encoder models (dev, seeds 1-3)",
+        "Dev scores use best-epoch selection on dev, so they are slightly optimistic. Test "
+        "results follow the protocol in SPEC.md and appear only after M6.",
+    ),
+    (
+        "encoder_check",
+        "Encoder check (M2, dev, model B)",
+        "Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean dev "
+        "macro-F1 is at least 0.020 higher than distilroberta-base; otherwise distilroberta-base.",
+    ),
+]
+
+
+def multi_seed(records: list[dict[str, Any]], purpose: str, title: str, note: str) -> list[str]:
+    """Mean and spread of dev macro-F1 over seeds, per config, for one purpose."""
     runs: dict[str, list[dict[str, Any]]] = {}
     for r in records:
-        if r["purpose"] == "encoder_check":
+        if r["purpose"] == purpose:
             runs.setdefault(r["config"]["name"], []).append(r)
     if not runs:
         return []
     lines = [
-        "## Encoder check (M2, dev, model B)",
+        f"## {title}",
         "",
-        "Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean dev "
-        "macro-F1 is at least 0.020 higher than distilroberta-base; otherwise distilroberta-base.",
+        note,
         "",
         "| Config | Encoder | Seeds | Dev macro-F1 per seed | Mean | Std | "
         "Best epochs | Train time per run (min) |",
@@ -92,7 +107,7 @@ def main() -> None:
         "Smoke runs check plumbing on a few train headlines; they are not evaluations.",
         "LLM latency is a network round trip and is not comparable to local CPU latency.",
         "",
-        *encoder_check(records),
+        *(line for section in SECTIONS for line in multi_seed(records, *section)),
         "## All runs",
         "",
         header,

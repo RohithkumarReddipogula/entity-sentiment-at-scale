@@ -16,14 +16,16 @@ from torch import nn
 from transformers import PreTrainedTokenizerFast, RobertaConfig, RobertaModel
 
 from entsent.config import CONFIG_DIR, TrainConfig, load_config
-from entsent.data import RAW_PATH, Entity, Example, load_split
-from entsent.experiment import run_training
+from entsent.data import LABELS, RAW_PATH, Entity, Example, load_split, sha256_file
+from entsent.experiment import load_checkpoint, run_training
 from entsent.training import (
     MARKER_CLOSE,
     MARKER_OPEN,
     build_instances,
+    make_loader,
     mark_entity,
     per_entity_instances,
+    predict,
     select_device,
     train,
 )
@@ -307,6 +309,33 @@ def test_run_writes_record_predictions_and_checkpoint(tmp_path: Path) -> None:
     assert "commit" in record["git"] and record["environment"]["device"] == "cpu"
     assert len(record["training"]["epochs"]) == 2
     assert len(record["metrics"]["all"]["macro_f1_ci95"]) == 2
-    preds = (tmp_path / "results" / "predictions" / f"{record['run_id']}.jsonl").read_text()
-    assert len(preds.splitlines()) == record["n_entities"] == 7
-    assert (tmp_path / record["checkpoint"] / "model.pt").exists()
+    preds_text = (tmp_path / "results" / "predictions" / f"{record['run_id']}.jsonl").read_text()
+    assert len(preds_text.splitlines()) == record["n_entities"] == 7
+    ckpt = tmp_path / record["checkpoint"]["path"]
+    assert sha256_file(ckpt / "model.pt") == record["checkpoint"]["model_sha256"]
+    assert record["checkpoint"]["epoch"] == record["training"]["best_epoch"]
+
+    # Reloading the checkpoint reproduces the recorded best-epoch dev predictions exactly.
+    model, tokenizer, loaded_cfg = load_checkpoint(ckpt)
+    assert loaded_cfg == cfg
+    instances = per_entity_instances(DEV)
+    loader = make_loader(instances, tokenizer, cfg.max_length, 4, False, 0)
+    preds = predict(model, loader, torch.device("cpu"))
+    recorded = [json.loads(line)["pred"] for line in preds_text.splitlines()]
+    assert [LABELS[p] for p in preds] == recorded
+
+
+def test_final_configs_share_all_training_settings() -> None:
+    final_b = load_config(CONFIG_DIR / "b_final.yaml").model_dump()
+    check = load_config(CONFIG_DIR / "b_distilroberta.yaml").model_dump()
+    for key in ("name", "device", "save_checkpoint"):
+        final_b.pop(key), check.pop(key)
+    assert final_b == check  # M3 trains exactly what M2 chose, no new tuning
+
+    c_path = CONFIG_DIR / "c_final.yaml"
+    if c_path.exists():  # added in M4
+        b = load_config(CONFIG_DIR / "b_final.yaml").model_dump()
+        c = load_config(c_path).model_dump()
+        for d in (b, c):
+            d.pop("name"), d.pop("architecture")
+        assert b == c

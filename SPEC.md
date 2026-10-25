@@ -49,6 +49,17 @@ Base encoder: a small model that trains in under about an hour on a free Colab T
 
 Decision rule, written now: C is preferred over B if its macro-F1 is not significantly worse (95% CI of the difference includes zero or favors C) AND it is cheaper per sentence. Otherwise B. The LLM baseline is a reference point, not a candidate for serving.
 
+### Seeds and test reporting protocol (added 2026-10-25, before M3 training and before any test data)
+
+- Models B and C are each trained with seeds 1, 2 and 3, using identical training settings (the configs differ only in architecture), deterministically on CPU. All six checkpoints are saved. Within each run, the epoch with the best dev macro-F1 is kept.
+- The test split is used once, in M6, in a single session that evaluates A, all three B seeds and all three C seeds.
+- Headline numbers for B and C: mean test macro-F1 over seeds 1-3, with the standard deviation and the per-seed values.
+- 95% CI for B and for C: paired bootstrap over test headlines (10,000 resamples); in each resample, macro-F1 is averaged over the three seeds. Seed variation is reported separately as the std.
+- The decision rule above uses the 95% CI of mean(C) − mean(B) from the same paired, seed-averaged bootstrap. "Cheaper per sentence" comes from the M5 CPU benchmark, measured on seed 1 of each model (speed does not depend on the seed).
+- McNemar on per-entity correctness is reported for each seed pair (B seed s against C seed s, s = 1, 2, 3).
+- The 2+ entity and mixed-label subsets are reported the same way. Model A is a single run with its own bootstrap CI.
+- Served checkpoint (M7): within the architecture chosen by the decision rule, the seed with the highest dev macro-F1 (ties go to the lower seed). Its own test score is reported in a separately labelled row, never as the headline.
+
 ## Milestones
 
 Each milestone ends with: tests passing, a short entry in RESULTS.md or LOG.md, and a commit the owner approves.

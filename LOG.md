@@ -125,3 +125,27 @@ inference; the cause has not been profiled.
   belongs in the README's limitations.
 - Both encoders beat the LLM baseline on dev (0.835) with model B.
 - M2 done.
+
+## 2026-10-25 · M3 Model B
+
+- Fixed before any M3 training and before any test data: the seeds and test reporting protocol,
+  now in SPEC.md ("Seeds and test reporting protocol"). In short: B and C are each trained with
+  seeds 1-3 using identical settings, deterministically on CPU, and all checkpoints are saved. The
+  M6 headline is the mean over seeds, with a seed-averaged paired bootstrap CI. The served
+  checkpoint is the best-dev seed of the architecture the decision rule picks.
+- Config `configs/b_final.yaml` = `b_distilroberta.yaml` with checkpoints on. No new tuning, so C
+  in M4 gets exactly the same training settings.
+- Training on CPU (deterministic kernels) instead of MPS, so each final checkpoint can be
+  reproduced exactly from its seed.
+- Results (dev, `results/b_final_s{1,2,3}_*.json`): macro-F1 0.8783 / 0.8768 / 0.8789, mean 0.878
+  (std 0.001), matching the M2 MPS runs (0.877). Each run took about 6.8 min on CPU, and every
+  seed's best epoch was 3. Checkpoints are 317 MB each in `checkpoints/` (gitignored), and each
+  record stores the SHA-256 of its weights.
+- B is +4.3 points over the LLM baseline on dev. Neutral recall is 0.86, against the LLM's 0.72.
+- Weak spot: 2+ entity headlines score 0.860 and mixed-label headlines 0.844, below B's overall
+  score. On mixed-label headlines B is slightly below the LLM (0.856), though the CIs overlap.
+  This is where model C is meant to help.
+- The best epoch was always the last (3). More epochs might help, but that would be tuning on dev.
+  C gets the same 3 epochs. This is listed as a limitation.
+- Served checkpoint if B wins in M6 (rule decided in advance): seed 3, the best on dev.
+- M3 done.

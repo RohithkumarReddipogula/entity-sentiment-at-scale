@@ -13,10 +13,10 @@ import torch
 from torch import nn
 
 from entsent.config import TrainConfig
-from entsent.data import REPO_ROOT, Example
+from entsent.data import REPO_ROOT, Example, sha256_file
 from entsent.metrics import BOOTSTRAP_SEED, N_BOOTSTRAP, evaluate
 from entsent.results import RESULTS_DIR, git_info, new_run_id, write_result
-from entsent.training import DTYPE, load_pretrained, train
+from entsent.training import DTYPE, EntityClassifier, load_pretrained, train
 
 CHECKPOINT_DIR = REPO_ROOT / "checkpoints"
 MODEL_IDS = {"per_entity": "B", "single_pass": "C"}
@@ -84,8 +84,13 @@ def run_training(
         ckpt.mkdir(parents=True, exist_ok=True)
         torch.save(outcome.best_state, ckpt / "model.pt")
         outcome.tokenizer.save_pretrained(ckpt / "tokenizer")
+        outcome.encoder_config.save_pretrained(ckpt / "encoder")
         (ckpt / "config.json").write_text(json.dumps(cfg.model_dump(), indent=2))
-        record["checkpoint"] = str(ckpt.relative_to(checkpoint_dir.parent))
+        record["checkpoint"] = {
+            "path": str(ckpt.relative_to(checkpoint_dir.parent)),
+            "model_sha256": sha256_file(ckpt / "model.pt"),
+            "epoch": outcome.best_epoch,
+        }
 
     path = write_result(record, results_dir)
     predictions = results_dir / "predictions" / f"{run_id}.jsonl"
@@ -97,3 +102,20 @@ def run_training(
             for i, (g, p) in enumerate(zip(gold, pred, strict=True)):
                 f.write(json.dumps({"id": hid, "entity": i, "gold": g, "pred": p}) + "\n")
     return path
+
+
+def load_checkpoint(
+    path: Path, device: torch.device | None = None
+) -> tuple[EntityClassifier, Any, TrainConfig]:
+    """Rebuild a saved model (encoder config + weights + tokenizer); nothing is downloaded."""
+    from transformers import AutoConfig, AutoModel, AutoTokenizer
+
+    cfg = TrainConfig.model_validate_json((path / "config.json").read_text())
+    tokenizer = AutoTokenizer.from_pretrained(path / "tokenizer")
+    encoder_config = AutoConfig.from_pretrained(path / "encoder")
+    encoder = AutoModel.from_config(encoder_config).to(DTYPE)
+    model = EntityClassifier(encoder, encoder_config.hidden_size, cfg.optim.dropout)
+    state = torch.load(path / "model.pt", map_location="cpu", weights_only=True)
+    model.load_state_dict(state)
+    model.to(device or torch.device("cpu")).eval()
+    return model, tokenizer, cfg

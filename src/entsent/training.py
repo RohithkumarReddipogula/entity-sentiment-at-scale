@@ -162,6 +162,7 @@ class TrainOutcome:
     n_train_instances: int
     n_parameters: int
     tokenizer: Any = field(repr=False)
+    encoder_config: Any = field(repr=False)
     best_state: dict[str, torch.Tensor] | None = field(default=None, repr=False)
 
 
@@ -316,5 +317,6 @@ def train(
         n_train_instances=len(train_inst),
         n_parameters=sum(p.numel() for p in model.parameters()),
         tokenizer=tokenizer,
+        encoder_config=model.encoder.config,
         best_state=best_state,
     )
