@@ -1,0 +1,7 @@
+# Whitelist: nothing enters the build context unless listed here. This keeps .env, data/raw,
+# checkpoints, caches, results and .git out of the image by construction.
+*
+!docker/requirements-serve.txt
+!src/
+**/__pycache__
+**/*.pyc

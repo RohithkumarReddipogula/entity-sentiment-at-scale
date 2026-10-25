@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment bench
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment bench serve smoke-api docker-reqs docker-build docker-run
 
 SEEDS ?= 1 2 3
 
@@ -60,6 +60,31 @@ alignment:
 bench:
 	uv run python scripts/bench.py
 	uv run python scripts/make_results.py
+
+# M7: serve the chosen model (C seed 1). Weights are mounted, never baked into the image.
+SERVED := c_final_s1_20261025T160107Z
+SERVED_SHA := $(shell python3 -c "import json; print(json.load(open('results/$(SERVED).json'))['checkpoint']['model_sha256'])")
+IMAGE := entity-sentiment-api:m7
+
+serve:
+	MODEL_DIR=checkpoints/$(SERVED) MODEL_SHA256=$(SERVED_SHA) HF_HUB_OFFLINE=1 \
+		uv run uvicorn entsent.api:app --host 127.0.0.1 --port 8000
+
+smoke-api:
+	uv run python scripts/smoke_api.py
+
+docker-reqs:
+	uv export --format requirements-txt --no-dev --group serve --no-emit-project --no-hashes \
+		--no-annotate --no-header | grep -vE '^(torch|nvidia-|triton|cuda-)' \
+		> docker/requirements-serve.txt
+
+docker-build:
+	docker build -t $(IMAGE) .
+
+docker-run:
+	docker run --rm -p 8000:8000 \
+		-v "$(CURDIR)/checkpoints/$(SERVED):/model:ro" \
+		-e MODEL_SHA256=$(SERVED_SHA) $(IMAGE)
 
 # Every run is attempted; RESULTS.md is regenerated even if one fails, then make fails.
 check-encoders:

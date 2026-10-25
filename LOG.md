@@ -313,3 +313,52 @@ inference; the cause has not been profiled.
 - All 5 comparative/target confusions are in 2+ entity headlines. Single-pass pooling did not
   remove that failure mode.
 - M6 done. Any later change to models or data is reported as a new, clearly labelled run.
+
+## 2026-10-25 · M7 Serving
+
+- `src/entsent/api.py`: FastAPI with `POST /predict` (text + entity character spans in; label,
+  confidence and the three probabilities per entity out) and `GET /health` (503 until the model is
+  loaded, or if loading failed). It serves C seed 1 (`c_final_s1_20261025T160107Z`), the checkpoint
+  the M6 rule chose, with the same inference code as training and evaluation.
+- The weights are not in git or in the image: the checkpoint folder is mounted read-only
+  (`MODEL_DIR`), and with `MODEL_SHA256` set the server refuses mismatching weights. The model's
+  identity comes from its config (`c_final_s1`), not from the folder it is mounted in. The smoke
+  test caught the first version reporting "model".
+- Input validation (422 with a reason): text 1-1,000 characters, 1-20 entities, 1-10 mentions,
+  spans inside the text, non-empty and not whitespace only, no overlapping spans, and the
+  tokenized length within 128 (too long is 422, not 500). Request bodies are never logged.
+- New packages: `fastapi` 0.162.0 and `uvicorn` 0.54.0, in a `serve` dependency group (a default
+  group, so CI runs the API tests). `scipy` is now declared directly (used since M6).
+- Tests: 21 API tests (148 in total) with the tiny model saved as a real checkpoint. They cover
+  health, sha mismatch, schema, probabilities, determinism, agreement with the evaluation code,
+  12 kinds of bad input, and a local-only test that the API reproduces C seed 1's recorded labels on
+  200 dev headlines.
+- Docker: `python:3.12.15-slim-bookworm` pinned by digest, CPU-only torch 2.14.1 (no CUDA or
+  nvidia packages), the exact versions from `uv.lock` (`docker/requirements-serve.txt`, reproduced
+  by `make docker-reqs`), non-root user, `HEALTHCHECK`. `.dockerignore` is a whitelist: the image
+  holds only `src/` and the requirements; no `.env`, data or weights were found inside. Image size
+  1.96 GB; it includes training-only packages (scikit-learn, scipy, pandas). A smaller serving
+  image is planned for M8.
+- Smoke test against the container (`scripts/smoke_api.py`): 0 label mismatches on 200 dev
+  headlines against C seed 1's recorded predictions, a bad request gives 422, Docker's
+  HEALTHCHECK reports healthy, and no headline text appears in the logs.
+
+### macOS vs Linux: the M5 thread finding does not carry over
+
+| Where the API runs (Apple M5) | torch BLAS | Median per request | Max |
+|---|---|---:|---:|
+| Natively on macOS, 1 thread (`make serve`) | Accelerate | 6.3 ms | 23.7 ms |
+| Docker (OrbStack, Linux arm64), 1 thread, 2 workers | OpenBLAS + oneDNN | 74 ms | 81 ms |
+| Same, measured inside the container (no port forwarding) | OpenBLAS + oneDNN | 73.8 ms | 79.0 ms |
+| Docker, 4 threads, 1 worker (**image default**) | OpenBLAS + oneDNN | 23.3 ms | 29.6 ms |
+
+- The API itself adds about 0.5 ms and port forwarding adds nothing; the gap is torch's maths
+  library. The macOS wheel uses Apple Accelerate, while the Linux arm64 CPU wheel uses OpenBLAS and
+  oneDNN.
+- M5's "1 thread is the most efficient" holds on macOS, not in this Linux image, where 4 threads
+  are about 3x faster. **The M5 speed numbers are specific to macOS.** The B vs C comparison was
+  made under identical conditions, so the relative result stands; absolute serving latency depends
+  on the platform.
+- Image default, per the owner: `TORCH_THREADS=4`, `WEB_CONCURRENCY=1`, documented as measured on
+  this setup. Not measured: x86-64 Linux (Intel MKL), which would behave differently again.
+- M7 done.
