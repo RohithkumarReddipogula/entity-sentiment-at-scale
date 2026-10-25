@@ -149,3 +149,9 @@ inference; the cause has not been profiled.
   C gets the same 3 epochs. This is listed as a limitation.
 - Served checkpoint if B wins in M6 (rule decided in advance): seed 3, the best on dev.
 - M3 done.
+- Reproducibility check: seed 1 was retrained on CPU from the committed code (`7175679`) as
+  `results/b_final_s1_20261025T152030Z.json` (`purpose: repro_check`). The weights' SHA-256
+  (`e9803a6873d6…`), per-epoch losses, dev macro-F1 and all 2,150 dev predictions are identical to
+  the original seed-1 run, which had been trained from uncommitted code. Its duplicate checkpoint
+  was removed with the owner's approval, so that record's `checkpoint.path` no longer exists; its
+  SHA-256 still documents the match.
