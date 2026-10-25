@@ -3,22 +3,26 @@ name = "entsent"
 version = "0.1.0"
 description = "Entity-level sentiment: per-entity vs single-pass encoders vs an LLM baseline"
 requires-python = ">=3.12,<3.13"
+# Base: what inference needs (the serving image installs base + serve only).
 dependencies = [
-    "httpx>=0.28.1",
     "numpy>=2.5.4",
-    "pandas>=2.2",
-    "protobuf>=7.36.2",
     "pydantic>=2.14.1",
-    "python-dotenv>=1.2.4",
     "pyyaml>=6.0.3",
-    "scikit-learn>=1.5",
-    "scipy>=1.18.1",
-    "sentencepiece>=0.2.2",
     "torch>=2.14.1",
     "transformers>=5.20.2",
 ]
 
 [dependency-groups]
+# Data, splits, training, the LLM baseline and the statistics.
+train = [
+    "httpx>=0.28.1",
+    "pandas>=2.2",
+    "protobuf>=7.36.2",
+    "python-dotenv>=1.2.4",
+    "scikit-learn>=1.5",
+    "scipy>=1.18.1",
+    "sentencepiece>=0.2.2",
+]
 dev = [
     "mypy>=1.11",
     "pandas-stubs>=2.2",
@@ -31,7 +35,8 @@ serve = [
 ]
 
 [tool.uv]
-default-groups = ["dev", "serve"]  # CI runs the API tests; the Docker image installs serve only
+# Local work and CI get everything; the Docker image installs base + serve only.
+default-groups = ["train", "dev", "serve"]
 
 [build-system]
 requires = ["hatchling"]

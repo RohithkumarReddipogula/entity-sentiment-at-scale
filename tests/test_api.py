@@ -164,6 +164,38 @@ def test_too_many_tokens_is_422_not_500(client: TestClient) -> None:
     assert r.status_code == 422 and "max_length" in r.json()["detail"]
 
 
+# --- the serving image installs base + serve only --------------------------------------------
+
+
+def test_api_works_without_training_only_packages(tiny_checkpoint: Path) -> None:
+    """The Docker image has no pandas, scikit-learn, scipy, sentencepiece, protobuf or dotenv.
+
+    transformers imports scikit-learn and sentencepiece when they are installed, so instead of
+    checking imports, this blocks those packages (as in the image) and runs the API.
+    """
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "BANNED = {'pandas', 'sklearn', 'scipy', 'sentencepiece', 'google', 'dotenv'}\n"
+        "for name in BANNED:  # like a missing package: find_spec -> None, import -> error\n"
+        "    sys.modules[name] = None\n"
+        "from pathlib import Path\n"
+        "from fastapi.testclient import TestClient\n"
+        "from entsent.api import create_app\n"
+        f"with TestClient(create_app(Path({str(tiny_checkpoint)!r}))) as c:\n"
+        "    assert c.get('/health').status_code == 200\n"
+        "    body = {'text': 'nike beats', 'entities': [{'spans': [[0, 4]]}]}\n"
+        "    r = c.post('/predict', json=body)\n"
+        "    assert r.status_code == 200, r.text\n"
+        "print(sorted(m for m in BANNED if sys.modules.get(m) is not None))\n"
+    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr[-2000:]
+    assert out.stdout.strip().splitlines()[-1] == "[]"
+
+
 # --- the real served model (local only) ------------------------------------------------------
 
 

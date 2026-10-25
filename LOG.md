@@ -362,3 +362,32 @@ inference; the cause has not been profiled.
 - Image default, per the owner: `TORCH_THREADS=4`, `WEB_CONCURRENCY=1`, documented as measured on
   this setup. Not measured: x86-64 Linux (Intel MKL), which would behave differently again.
 - M7 done.
+
+## 2026-10-25 · M8 Polish (in progress)
+
+- Citations checked on the web before writing them. The Meltwater post is "Doing More With Less:
+  Rethinking Entity-Level Sentiment at Scale" (Tawhid, Schulte, Vardhan, Marton, Komban), Meltwater
+  Under the Hood, 23 April 2026; it states the 45.5% and 3.02% figures. SEntFiN 1.0 is JASIST
+  73(9), 1314-1335, 2022, DOI 10.1002/asi.24634 (from Crossref).
+- README.md: the first screen has the task, a generated test results table (A vs B vs C), the
+  decision and how to run the API. `make results` writes the results block from the M6, M5 and M1
+  records, and a test fails if it is stale. Also: what was compared, data and license, what I
+  learned, limitations, and a table to reproduce every number. MODEL_CARD.md covers C seed 1
+  (SHA-256, intended use, test results, error patterns). Code license: MIT.
+- Style checks in `tests/test_docs.py`: no em dashes and no hype words in README.md and
+  MODEL_CARD.md, correct citations, existing links, and an up-to-date results block.
+- Re-reading the README against the records caught four inaccurate statements, now fixed:
+  - a hard-coded test count that was already stale
+  - "bit for bit the same" for model C (bit-exact retraining was checked for model B seed 1 only)
+  - "7 times slower" without the real float32 figure (about 2.4 times)
+  - "laptop" (unknown)
+- Smaller serving image: the dependencies are split into base (torch, transformers, numpy,
+  pydantic, pyyaml), `train`, `serve` and `dev`, and the image installs base + serve (43 pinned
+  packages, down from 59). Size: **1.55 GB, down from 1.96 GB**. I had estimated about 1.2 GB, but
+  CPU torch alone is 642 MB. The smoke test passes: 0 mismatches on 200 dev headlines, median
+  22.7 ms, 422 for bad input, HEALTHCHECK healthy. No `.env`, data or weights in the image.
+- transformers imports scikit-learn and sentencepiece whenever they are installed, so "not
+  imported" is the wrong test. The new test makes those packages unavailable, as they are in the
+  image, and runs health and predict.
+- Tests: 156 pass locally. CI simulation (no data, cache, checkpoints, `.venv` or `.git`): 128
+  passed, 28 skipped as intended.

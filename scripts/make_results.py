@@ -177,6 +177,82 @@ def test_section() -> list[str]:
     return lines
 
 
+README_MD = REPO_ROOT / "README.md"
+README_MARKERS = ("<!-- BEGIN GENERATED: results -->", "<!-- END GENERATED: results -->")
+
+
+def readme_block() -> str:
+    """The README's first-screen results table and decision, built only from result files."""
+    test = json.loads(sorted((RESULTS_DIR / "test").glob("m6_test_*.json"))[-1].read_text())
+    bench = json.loads(sorted((RESULTS_DIR / "bench").glob("m5_bench_*.json"))[-1].read_text())
+    m1 = [r for r in load_results() if r["model_id"] == "A" and r["purpose"] == "eval"][-1]
+    arch, per, s = test["architectures"], test["per_model"], bench["summary"]
+    served = test["served"]
+    served_name = f"{served['architecture']}{served['seed']}"
+
+    def ci(value: float, bounds: list[float]) -> str:
+        return f"{value:.3f} [{bounds[0]:.3f}, {bounds[1]:.3f}]"
+
+    def arch_row(key: str, label: str) -> str:
+        a, b = arch["all"][key], s[f"{key}_threads4"]
+        return (
+            f"| {label} | {ci(a['mean_macro_f1'], a['ci95_seed_averaged'])} | "
+            f"{arch['multi_entity'][key]['mean_macro_f1']:.3f} | "
+            f"{arch['mixed_label'][key]['mean_macro_f1']:.3f} | "
+            f"{b['passes_per_1000_headlines']:,.0f} | {b['cpu_s_per_1000_headlines']:.2f} | "
+            f"{b['latency_median_ms']:.1f} / {b['latency_p95_ms']:.1f} ms | not priced (CPU) |"
+        )
+
+    a = per["A"]
+    diff = arch["all"]["C_minus_B"]
+    cpu_b, cpu_c = (
+        s["B_threads4"]["cpu_s_per_1000_headlines"],
+        s["C_threads4"]["cpu_s_per_1000_headlines"],
+    )
+    lines = [
+        f"Test set: {test['n_headlines']:,} headlines, {test['n_entities']:,} entities, "
+        "used once. B and C are the mean of 3 training seeds.",
+        "",
+        "| Model | Test macro-F1 [95% CI] | 2+ entities | Mixed labels | Forward passes "
+        "/ 1k headlines | CPU s / 1k headlines | Latency median / p95 | Cost / 1k headlines |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        f"| A: zero-shot LLM ({test['models']['A']['llm']}) | "
+        f"{ci(a['all']['macro_f1'], a['all']['macro_f1_ci95'])} | "
+        f"{a['multi_entity']['macro_f1']:.3f} | {a['mixed_label']['macro_f1']:.3f} | "
+        f"{m1['speed']['passes_per_1000_headlines']:,.0f} API calls | remote | "
+        f"{m1['speed']['latency_median_s'] * 1000:,.0f} / "
+        f"{m1['speed']['latency_p95_s'] * 1000:,.0f} ms (network, dev) | "
+        f"${test['models']['A']['cost_per_1000_headlines_usd']:.3f} |",
+        arch_row("B", "B: per-entity encoder"),
+        arch_row("C", "C: single-pass encoder"),
+        f"| {served['architecture']} seed {served['seed']} (the served model) | "
+        f"{ci(per[served_name]['all']['macro_f1'], per[served_name]['all']['macro_f1_ci95'])} | "
+        f"{per[served_name]['multi_entity']['macro_f1']:.3f} | "
+        f"{per[served_name]['mixed_label']['macro_f1']:.3f} | | | | |",
+        "",
+        f"CPU time and latency: {bench['environment']['chip']}, macOS, 4 torch threads; CPU "
+        "time in batches of 32 headlines, latency one headline at a time, end to end. These "
+        "numbers depend on the machine (see Limitations).",
+        "",
+        f"**Decision: {arch['decision']['chosen']}.** The rule was written before any test "
+        "result: choose C if its macro-F1 is not significantly worse than B's and it is "
+        f"cheaper. C minus B is {diff['mean_difference']:+.4f} with a 95% CI of "
+        f"[{diff['ci95'][0]:+.4f}, {diff['ci95'][1]:+.4f}], which includes zero. C uses "
+        f"{cpu_c:.2f} CPU seconds per 1,000 headlines against B's {cpu_b:.2f}, "
+        f"{100 * (1 - cpu_c / cpu_b):.0f}% less. So C is served, as "
+        f"{served['architecture']} seed {served['seed']}, the seed with the best dev score.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def update_readme() -> None:
+    begin, end = README_MARKERS
+    text = README_MD.read_text()
+    head, rest = text.split(begin, 1)
+    _, tail = rest.split(end, 1)
+    README_MD.write_text(f"{head}{begin}\n{readme_block()}{end}{tail}")
+
+
 def main() -> None:
     records = load_results()
     header = (
@@ -204,6 +280,9 @@ def main() -> None:
     ]
     RESULTS_MD.write_text("\n".join(lines))
     print(f"RESULTS.md: {len(records)} runs")
+    if README_MD.exists():
+        update_readme()
+        print("README.md: results block updated")
 
 
 if __name__ == "__main__":

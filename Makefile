@@ -74,7 +74,7 @@ smoke-api:
 	uv run python scripts/smoke_api.py
 
 docker-reqs:
-	uv export --format requirements-txt --no-dev --group serve --no-emit-project --no-hashes \
+	uv export --format requirements-txt --no-default-groups --group serve --no-emit-project --no-hashes \
 		--no-annotate --no-header | grep -vE '^(torch|nvidia-|triton|cuda-)' \
 		> docker/requirements-serve.txt
 
