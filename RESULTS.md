@@ -11,6 +11,7 @@ Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean d
 
 | Config | Encoder | Seeds | Dev macro-F1 per seed | Mean | Std | Best epochs | Train time per run (min) |
 |---|---|---|---|---:|---:|---|---:|
+| `b_deberta` | microsoft/deberta-v3-small | 1, 2, 3 | 0.891, 0.891, 0.892 | 0.892 | 0.001 | 3, 3, 2 | 6.1 |
 | `b_distilroberta` | distilbert/distilroberta-base | 1, 2, 3 | 0.876, 0.874, 0.881 | 0.877 | 0.003 | 3, 2, 2 | 3.6 |
 
 ## All runs
@@ -22,3 +23,6 @@ Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean d
 | `b_b_distilroberta_s1_20261024T123644Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.876 [0.859, 0.891] | 0.876 | 0.860 [0.830, 0.887] | 0.843 [0.803, 0.879] |  |  |  |  |
 | `b_b_distilroberta_s2_20261024T124029Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.874 [0.858, 0.890] | 0.874 | 0.849 [0.819, 0.877] | 0.826 [0.785, 0.863] |  |  |  |  |
 | `b_b_distilroberta_s3_20261024T124415Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.881 [0.866, 0.895] | 0.880 | 0.873 [0.847, 0.897] | 0.845 [0.809, 0.880] |  |  |  |  |
+| `b_deberta_s1_20261025T142519Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.891 [0.876, 0.905] | 0.891 | 0.889 [0.863, 0.912] | 0.860 [0.823, 0.894] |  |  |  |  |
+| `b_deberta_s2_20261025T143137Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.891 [0.876, 0.905] | 0.890 | 0.880 [0.854, 0.904] | 0.862 [0.825, 0.896] |  |  |  |  |
+| `b_deberta_s3_20261025T143755Z` | B | encoder_check | dev | 1,613 / 2,150 | 0.892 [0.877, 0.906] | 0.892 | 0.880 [0.854, 0.904] | 0.859 [0.822, 0.894] |  |  |  |  |

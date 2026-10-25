@@ -1,0 +1,177 @@
+{
+  "run_id": "b_deberta_s2_20261025T143137Z",
+  "timestamp": "2026-10-25T14:31:37+00:00",
+  "model_id": "B",
+  "model_name": "Per-entity encoder",
+  "purpose": "encoder_check",
+  "split": "dev",
+  "n_headlines": 1613,
+  "n_entities": 2150,
+  "git": {
+    "commit": "636a1168e2c9dca4ee28416c864cbcb088723937",
+    "dirty": true
+  },
+  "config_path": "configs/b_deberta.yaml",
+  "config": {
+    "name": "b_deberta",
+    "architecture": "per_entity",
+    "encoder": {
+      "name": "microsoft/deberta-v3-small",
+      "revision": "a36c739020e01763fe789b4b85e2df55d6180012"
+    },
+    "max_length": 128,
+    "optim": {
+      "epochs": 3,
+      "batch_size": 32,
+      "lr": 3e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "max_grad_norm": 1.0,
+      "dropout": 0.1
+    },
+    "seed": 2,
+    "device": "auto",
+    "save_checkpoint": false
+  },
+  "seed": {
+    "train": 2,
+    "bootstrap": 0,
+    "n_bootstrap": 10000
+  },
+  "environment": {
+    "device": "mps",
+    "torch": "2.14.1",
+    "python": "3.12.15",
+    "machine": "arm64",
+    "deterministic": false,
+    "dtype": "torch.float32"
+  },
+  "training": {
+    "best_epoch": 3,
+    "epochs": [
+      {
+        "epoch": 1,
+        "train_loss": 0.6780417547148617,
+        "dev_macro_f1": 0.8615667472982217,
+        "dev_accuracy": 0.8604651162790697,
+        "train_seconds": 122.11272441699998,
+        "eval_seconds": 2.7785010830000374
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.2852705219949159,
+        "dev_macro_f1": 0.8864684912588184,
+        "dev_accuracy": 0.8851162790697674,
+        "train_seconds": 121.17127220900011,
+        "eval_seconds": 2.7005446250000205
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.18422762836223538,
+        "dev_macro_f1": 0.8912547951179294,
+        "dev_accuracy": 0.8902325581395348,
+        "train_seconds": 121.20818008300012,
+        "eval_seconds": 2.7287054589999116
+      }
+    ],
+    "train_seconds": 364.4921767090002,
+    "n_train_instances": 10098,
+    "n_parameters": 141232131,
+    "selection": "best dev macro-F1 over epochs"
+  },
+  "metrics": {
+    "all": {
+      "macro_f1": 0.8912547951179294,
+      "accuracy": 0.8902325581395348,
+      "n_entities": 2150,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8876117496807152,
+          "recall": 0.9144736842105263,
+          "f1": 0.9008425145819832,
+          "support": 760
+        },
+        "negative": {
+          "precision": 0.8823529411764706,
+          "recall": 0.9194395796847635,
+          "f1": 0.9005145797598628,
+          "support": 571
+        },
+        "neutral": {
+          "precision": 0.8989637305699482,
+          "recall": 0.8473748473748474,
+          "f1": 0.8724072910119421,
+          "support": 819
+        }
+      },
+      "n_headlines": 1613,
+      "macro_f1_ci95": [
+        0.8762542330524781,
+        0.905438164313857
+      ]
+    },
+    "multi_entity": {
+      "macro_f1": 0.8803131278378804,
+      "accuracy": 0.8814968814968815,
+      "n_entities": 962,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8849557522123894,
+          "recall": 0.9009009009009009,
+          "f1": 0.8928571428571429,
+          "support": 333
+        },
+        "negative": {
+          "precision": 0.8464912280701754,
+          "recall": 0.8935185185185185,
+          "f1": 0.8693693693693694,
+          "support": 216
+        },
+        "neutral": {
+          "precision": 0.8987341772151899,
+          "recall": 0.8595641646489104,
+          "f1": 0.8787128712871287,
+          "support": 413
+        }
+      },
+      "n_headlines": 425,
+      "macro_f1_ci95": [
+        0.8543318863941497,
+        0.9043331764467635
+      ]
+    },
+    "mixed_label": {
+      "macro_f1": 0.8619779709118672,
+      "accuracy": 0.8619854721549637,
+      "n_entities": 413,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8823529411764706,
+          "recall": 0.8391608391608392,
+          "f1": 0.8602150537634409,
+          "support": 143
+        },
+        "negative": {
+          "precision": 0.8712871287128713,
+          "recall": 0.8543689320388349,
+          "f1": 0.8627450980392157,
+          "support": 103
+        },
+        "neutral": {
+          "precision": 0.8409090909090909,
+          "recall": 0.8862275449101796,
+          "f1": 0.8629737609329446,
+          "support": 167
+        }
+      },
+      "n_headlines": 184,
+      "macro_f1_ci95": [
+        0.8249910964495042,
+        0.8964198230330305
+      ]
+    }
+  }
+}

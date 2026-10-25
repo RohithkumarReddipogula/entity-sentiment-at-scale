@@ -37,7 +37,7 @@
   yet committed when it ran. The code that produced it is the M1 commit, together with the
   prompt SHA-256 stored in the record.
 
-## 2026-10-24 · M2 Training setup (in progress)
+## 2026-10-24 · M2 Training setup
 
 ### Hardware benchmark (before any training)
 
@@ -104,3 +104,24 @@ inference; the cause has not been profiled.
   deberta-v3-small into the home Hugging Face cache, outside the project folder. The owner approved
   removing that folder, and it was removed. `tests/conftest.py` now forces the project cache and
   offline mode for all tests.
+
+### Decision rule confirmed (2026-10-25, before any DeBERTa dev run)
+
+- The owner keeps the 2-point rule after seeing the float32 numbers (1.7-2.4x slower on CPU):
+  **choose deberta-v3-small only if its mean dev macro-F1 over seeds 1/2/3 is at least 0.020
+  higher than distilroberta-base's (mean 0.877); otherwise choose distilroberta-base.**
+
+### Encoder check result and decision (2026-10-25)
+
+- deberta-v3-small (float32), seeds 1/2/3: dev macro-F1 0.8914 / 0.8913 / 0.8922, mean 0.8916
+  (std 0.001), best epochs 3 / 3 / 2, about 2 min per epoch on MPS.
+  Records: `results/b_deberta_s{1,2,3}_*.json`.
+- distilroberta-base: mean 0.8770 (std 0.003).
+- Difference: +0.0147 for deberta-v3-small, below the 0.020 bar. **Decision: distilroberta-base**,
+  fixed from now on for models B and C.
+- Honest notes: the gap is about 5-10x the seed spread, so deberta-v3-small really is more accurate
+  on dev; we give that up for 1.7-2.4x lower CPU cost, as the rule decided in advance. The original
+  1-point rule would have chosen deberta-v3-small, so the threshold decided the outcome. This
+  belongs in the README's limitations.
+- Both encoders beat the LLM baseline on dev (0.835) with model B.
+- M2 done.
