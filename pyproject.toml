@@ -7,9 +7,14 @@ dependencies = [
     "httpx>=0.28.1",
     "numpy>=2.5.4",
     "pandas>=2.2",
+    "protobuf>=7.36.2",
     "pydantic>=2.14.1",
     "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
     "scikit-learn>=1.5",
+    "sentencepiece>=0.2.2",
+    "torch>=2.14.1",
+    "transformers>=5.20.2",
 ]
 
 [dependency-groups]
@@ -40,8 +45,14 @@ strict = true
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*"]
+module = ["sklearn.*", "yaml"]
 ignore_missing_imports = true
+
+# transformers is largely unannotated; treat it as Any instead of failing strict mode.
+[[tool.mypy.overrides]]
+module = ["transformers", "transformers.*"]
+follow_imports = "skip"
+follow_untyped_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

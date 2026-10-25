@@ -1,0 +1,176 @@
+{
+  "run_id": "b_b_distilroberta_s2_20261024T124029Z",
+  "timestamp": "2026-10-24T12:40:29+00:00",
+  "model_id": "B",
+  "model_name": "Per-entity encoder",
+  "purpose": "encoder_check",
+  "split": "dev",
+  "n_headlines": 1613,
+  "n_entities": 2150,
+  "git": {
+    "commit": "d180cc9048d5cf38407b1088d1fafd567849f3d0",
+    "dirty": true
+  },
+  "config_path": "configs/b_distilroberta.yaml",
+  "config": {
+    "name": "b_distilroberta",
+    "architecture": "per_entity",
+    "encoder": {
+      "name": "distilbert/distilroberta-base",
+      "revision": "fb53ab8802853c8e4fbdbcd0529f21fc6f459b2b"
+    },
+    "max_length": 128,
+    "optim": {
+      "epochs": 3,
+      "batch_size": 32,
+      "lr": 3e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "max_grad_norm": 1.0,
+      "dropout": 0.1
+    },
+    "seed": 2,
+    "device": "auto",
+    "save_checkpoint": false
+  },
+  "seed": {
+    "train": 2,
+    "bootstrap": 0,
+    "n_bootstrap": 10000
+  },
+  "environment": {
+    "device": "mps",
+    "torch": "2.14.1",
+    "python": "3.12.15",
+    "machine": "arm64",
+    "deterministic": false
+  },
+  "training": {
+    "best_epoch": 2,
+    "epochs": [
+      {
+        "epoch": 1,
+        "train_loss": 0.621841129622882,
+        "dev_macro_f1": 0.8313468310827586,
+        "dev_accuracy": 0.8306976744186046,
+        "train_seconds": 71.97524945899931,
+        "eval_seconds": 1.8391862079988641
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.3072828619469759,
+        "dev_macro_f1": 0.8744940292175684,
+        "dev_accuracy": 0.873953488372093,
+        "train_seconds": 71.89343924999957,
+        "eval_seconds": 1.825519207999605
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.208953200220543,
+        "dev_macro_f1": 0.8727609990143369,
+        "dev_accuracy": 0.8725581395348837,
+        "train_seconds": 71.70674791700003,
+        "eval_seconds": 1.8225259999999253
+      }
+    ],
+    "train_seconds": 215.57543662599892,
+    "n_train_instances": 10098,
+    "n_parameters": 82122243,
+    "selection": "best dev macro-F1 over epochs"
+  },
+  "metrics": {
+    "all": {
+      "macro_f1": 0.8744940292175684,
+      "accuracy": 0.873953488372093,
+      "n_entities": 2150,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8947368421052632,
+          "recall": 0.8723684210526316,
+          "f1": 0.8834110592938041,
+          "support": 760
+        },
+        "negative": {
+          "precision": 0.8552412645590682,
+          "recall": 0.9001751313485113,
+          "f1": 0.8771331058020477,
+          "support": 571
+        },
+        "neutral": {
+          "precision": 0.8688118811881188,
+          "recall": 0.8571428571428571,
+          "f1": 0.8629379225568531,
+          "support": 819
+        }
+      },
+      "n_headlines": 1613,
+      "macro_f1_ci95": [
+        0.8580362167833651,
+        0.8903774673790967
+      ]
+    },
+    "multi_entity": {
+      "macro_f1": 0.8494576366132622,
+      "accuracy": 0.8534303534303534,
+      "n_entities": 962,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8707692307692307,
+          "recall": 0.8498498498498499,
+          "f1": 0.8601823708206687,
+          "support": 333
+        },
+        "negative": {
+          "precision": 0.7939914163090128,
+          "recall": 0.8564814814814815,
+          "f1": 0.8240534521158129,
+          "support": 216
+        },
+        "neutral": {
+          "precision": 0.8737623762376238,
+          "recall": 0.8547215496368039,
+          "f1": 0.8641370869033048,
+          "support": 413
+        }
+      },
+      "n_headlines": 425,
+      "macro_f1_ci95": [
+        0.818554616421876,
+        0.8773251490499437
+      ]
+    },
+    "mixed_label": {
+      "macro_f1": 0.8258927643052109,
+      "accuracy": 0.8280871670702179,
+      "n_entities": 413,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8507462686567164,
+          "recall": 0.7972027972027972,
+          "f1": 0.8231046931407943,
+          "support": 143
+        },
+        "negative": {
+          "precision": 0.8018867924528302,
+          "recall": 0.8252427184466019,
+          "f1": 0.8133971291866029,
+          "support": 103
+        },
+        "neutral": {
+          "precision": 0.8265895953757225,
+          "recall": 0.8562874251497006,
+          "f1": 0.8411764705882353,
+          "support": 167
+        }
+      },
+      "n_headlines": 184,
+      "macro_f1_ci95": [
+        0.7845136796949496,
+        0.8631949116484522
+      ]
+    }
+  }
+}

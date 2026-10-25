@@ -18,3 +18,7 @@ __pycache__/
 
 # llm response cache (contains headline text)
 results/cache/
+
+# hugging face model cache (HF_HOME) and trained weights (> 50 MB)
+.cache/
+checkpoints/

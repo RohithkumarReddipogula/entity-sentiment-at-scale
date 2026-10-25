@@ -1,0 +1,19 @@
+# Model B (per-entity encoder) on deberta-v3-small. Used for the M2 encoder check.
+# Same hyperparameters as b_distilroberta.yaml; only the encoder differs.
+name: b_deberta
+architecture: per_entity
+encoder:
+  name: microsoft/deberta-v3-small  # MIT; weights only as pytorch_model.bin (loaded weights_only)
+  revision: a36c739020e01763fe789b4b85e2df55d6180012
+max_length: 128
+optim:
+  epochs: 3
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  dropout: 0.1
+seed: 1
+device: auto
+save_checkpoint: false

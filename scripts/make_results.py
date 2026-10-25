@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import statistics
 from typing import Any
 
 from entsent.data import REPO_ROOT
@@ -32,11 +33,47 @@ def row(r: dict[str, Any]) -> str:
         f1_cell(m["multi_entity"]),
         f1_cell(m["mixed_label"]),
         str(r.get("invalid_headlines", "")),
-        f"{speed.get('passes_per_1000_headlines', 0):,.0f}",
+        f"{speed['passes_per_1000_headlines']:,.0f}" if speed else "",
         f"{speed['latency_median_s']:.2f} / {speed['latency_p95_s']:.2f}" if speed else "",
         f"${cost:.4f}" if cost is not None else "",
     ]
     return "| " + " | ".join(cells) + " |"
+
+
+def encoder_check(records: list[dict[str, Any]]) -> list[str]:
+    """M2: mean and spread of dev macro-F1 over seeds, per encoder config."""
+    runs: dict[str, list[dict[str, Any]]] = {}
+    for r in records:
+        if r["purpose"] == "encoder_check":
+            runs.setdefault(r["config"]["name"], []).append(r)
+    if not runs:
+        return []
+    lines = [
+        "## Encoder check (M2, dev, model B)",
+        "",
+        "Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean dev "
+        "macro-F1 is at least 0.020 higher than distilroberta-base; otherwise distilroberta-base.",
+        "",
+        "| Config | Encoder | Seeds | Dev macro-F1 per seed | Mean | Std | "
+        "Best epochs | Train time per run (min) |",
+        "|---|---|---|---|---:|---:|---|---:|",
+    ]
+    for name, rs in sorted(runs.items()):
+        rs = sorted(rs, key=lambda r: r["seed"]["train"])
+        f1 = [r["metrics"]["all"]["macro_f1"] for r in rs]
+        minutes = statistics.mean(r["training"]["train_seconds"] for r in rs) / 60
+        cells = [
+            f"`{name}`",
+            rs[0]["config"]["encoder"]["name"],
+            ", ".join(str(r["seed"]["train"]) for r in rs),
+            ", ".join(f"{v:.3f}" for v in f1),
+            f"{statistics.mean(f1):.3f}",
+            f"{statistics.stdev(f1):.3f}" if len(f1) > 1 else "",
+            ", ".join(str(r["training"]["best_epoch"]) for r in rs),
+            f"{minutes:.1f}",
+        ]
+        lines.append("| " + " | ".join(cells) + " |")
+    return [*lines, ""]
 
 
 def main() -> None:
@@ -55,6 +92,7 @@ def main() -> None:
         "Smoke runs check plumbing on a few train headlines; they are not evaluations.",
         "LLM latency is a network round trip and is not comparable to local CPU latency.",
         "",
+        *encoder_check(records),
         "## All runs",
         "",
         header,
