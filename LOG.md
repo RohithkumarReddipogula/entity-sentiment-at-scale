@@ -391,3 +391,42 @@ inference; the cause has not been profiled.
   image, and runs health and predict.
 - Tests: 156 pass locally. CI simulation (no data, cache, checkpoints, `.venv` or `.git`): 128
   passed, 28 skipped as intended.
+
+### History audit and rewrite before publishing (2026-10-25)
+
+- A read-only audit of every commit found no raw data, `.env`, response cache, private results,
+  checkpoints, weights or blobs over 1 MB, and no secrets (only the deliberate fake key in
+  `tests/test_llm_baseline.py`). It did find SEntFiN headline text: 32 full headlines in the
+  DATASET.md cleaning log (since M0) and 3 headlines plus 5 shorter pieces in two test files.
+- Owner's decision: remove it and rewrite history (nothing was pushed yet); keep the commit email.
+  - The cleaning log now shows ID, action, original and result, without the headline.
+  - The tests use made-up headlines with the same features, checked to share no 5-word run with
+    SEntFiN.
+  - `git filter-repo --replace-text` then removed the old strings from all earlier commits. The
+    test lines were replaced by exactly the new lines, so old commits stay consistent; the
+    DATASET.md headlines became "(headline text removed)".
+- Checks after the rewrite:
+  - the final tree is identical before and after
+  - the full history has 0 full headlines and 0 runs of 6 or more words from any headline
+  - the old objects are gone
+  - `make check` (156 passed) and `make data-check` pass
+- A backup of the pre-rewrite history is kept outside the project until the repo is pushed and CI
+  is green.
+- **Every commit hash changed.** Run records in `results/` keep the hash they were made with
+  (`git.commit`), and earlier LOG.md entries quote old hashes. This map translates them:
+
+| Old | New | Commit |
+|---|---|---|
+| `7d6b03a` | `532071b` | M0 |
+| `d180cc9` | `799f8cb` | M1 |
+| `636a116` | `e801381` | M2 (part 1) |
+| `dd84203` | `e184a8d` | M2 |
+| `7175679` | `09ba1e3` | M3 |
+| `6561d3b` | `53b033b` | M3 reproducibility check |
+| `91331a8` | `ee8e173` | M4 |
+| `3c1b96d` | `78850e7` | M5 |
+| `5781b9d` | `8dc6549` | M6 (prep) |
+| `82912ee` | `93f36a8` | M6 |
+| `afea6ad` | `8046ef6` | M7 |
+| `775a4ac` | `1ac82e7` | M8 |
+| `af8f390` | `bba3c91` | Remove SEntFiN headline text |
