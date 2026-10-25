@@ -1,0 +1,234 @@
+{
+  "source_record": "m6_test_20261025T165028Z",
+  "model": "C1",
+  "n_wrong_entities_total": 252,
+  "n_sampled": 40,
+  "sampling_seed": 0,
+  "method": "read by hand (headline, entity, gold, C1, A and B1 predictions); one pattern per error",
+  "gold_to_pred": {
+    "neutral->negative": 10,
+    "negative->neutral": 8,
+    "neutral->positive": 7,
+    "positive->neutral": 5,
+    "positive->negative": 5,
+    "negative->positive": 5
+  },
+  "A_right_total": 20,
+  "B_same_seed_right_total": 6,
+  "patterns": {
+    "neutral_vs_polar_boundary": {
+      "description": "Hedged, advisory or forecast language on the neutral/polar boundary; both the gold label and the model's reading are defensible",
+      "count": 15,
+      "A_right": 1,
+      "B_same_seed_right": 0,
+      "multi_entity": 6,
+      "items": [
+        {
+          "id": 468,
+          "entity_index": 0
+        },
+        {
+          "id": 779,
+          "entity_index": 0
+        },
+        {
+          "id": 1168,
+          "entity_index": 0
+        },
+        {
+          "id": 1186,
+          "entity_index": 0
+        },
+        {
+          "id": 2986,
+          "entity_index": 0
+        },
+        {
+          "id": 3939,
+          "entity_index": 0
+        },
+        {
+          "id": 5639,
+          "entity_index": 1
+        },
+        {
+          "id": 6137,
+          "entity_index": 0
+        },
+        {
+          "id": 6509,
+          "entity_index": 2
+        },
+        {
+          "id": 6901,
+          "entity_index": 0
+        },
+        {
+          "id": 7166,
+          "entity_index": 1
+        },
+        {
+          "id": 9649,
+          "entity_index": 0
+        },
+        {
+          "id": 10153,
+          "entity_index": 0
+        },
+        {
+          "id": 10282,
+          "entity_index": 1
+        },
+        {
+          "id": 10422,
+          "entity_index": 1
+        }
+      ]
+    },
+    "likely_annotation_error": {
+      "description": "Gold label looks wrong; all models agree with each other against it (e.g. 'rallies 14%' labelled negative)",
+      "count": 3,
+      "A_right": 0,
+      "B_same_seed_right": 0,
+      "multi_entity": 2,
+      "items": [
+        {
+          "id": 4955,
+          "entity_index": 1
+        },
+        {
+          "id": 5625,
+          "entity_index": 0
+        },
+        {
+          "id": 9560,
+          "entity_index": 0
+        }
+      ]
+    },
+    "missed_implicit_or_jargon_sentiment": {
+      "description": "Clear sentiment carried by finance jargon or an implied consequence ('snaps', 'overweight', 'defreeze', 'recommend sell', 'withdraws IPO prospectus'); model predicts neutral or the reverse",
+      "count": 10,
+      "A_right": 9,
+      "B_same_seed_right": 2,
+      "multi_entity": 1,
+      "items": [
+        {
+          "id": 2424,
+          "entity_index": 0
+        },
+        {
+          "id": 3008,
+          "entity_index": 0
+        },
+        {
+          "id": 3364,
+          "entity_index": 0
+        },
+        {
+          "id": 3801,
+          "entity_index": 0
+        },
+        {
+          "id": 4257,
+          "entity_index": 0
+        },
+        {
+          "id": 8364,
+          "entity_index": 0
+        },
+        {
+          "id": 8678,
+          "entity_index": 0
+        },
+        {
+          "id": 9065,
+          "entity_index": 0
+        },
+        {
+          "id": 9066,
+          "entity_index": 0
+        },
+        {
+          "id": 10064,
+          "entity_index": 0
+        }
+      ]
+    },
+    "negation_or_composition": {
+      "description": "Negation or compositional phrasing ('not bleak', 'bearishness ebbs', 'improvement required', 'no serious corrections')",
+      "count": 5,
+      "A_right": 3,
+      "B_same_seed_right": 2,
+      "multi_entity": 3,
+      "items": [
+        {
+          "id": 4535,
+          "entity_index": 0
+        },
+        {
+          "id": 5050,
+          "entity_index": 1
+        },
+        {
+          "id": 7313,
+          "entity_index": 0
+        },
+        {
+          "id": 8177,
+          "entity_index": 0
+        },
+        {
+          "id": 9852,
+          "entity_index": 0
+        }
+      ]
+    },
+    "comparative_or_target_confusion": {
+      "description": "Two entities compared or linked ('prefer X over Y', 'weaker yen helps Nikkei'); the target entity gets the wrong side",
+      "count": 5,
+      "A_right": 5,
+      "B_same_seed_right": 1,
+      "multi_entity": 5,
+      "items": [
+        {
+          "id": 1509,
+          "entity_index": 0
+        },
+        {
+          "id": 1657,
+          "entity_index": 1
+        },
+        {
+          "id": 10296,
+          "entity_index": 1
+        },
+        {
+          "id": 10416,
+          "entity_index": 1
+        },
+        {
+          "id": 10477,
+          "entity_index": 1
+        }
+      ]
+    },
+    "spurious_keyword_polarity": {
+      "description": "No sentiment in the headline, but a topic word triggers polarity ('chart check', 'court order on bail plea')",
+      "count": 2,
+      "A_right": 2,
+      "B_same_seed_right": 1,
+      "multi_entity": 1,
+      "items": [
+        {
+          "id": 4784,
+          "entity_index": 0
+        },
+        {
+          "id": 6010,
+          "entity_index": 0
+        }
+      ]
+    }
+  }
+}

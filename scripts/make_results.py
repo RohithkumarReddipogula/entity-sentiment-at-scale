@@ -151,12 +151,30 @@ def test_section() -> list[str]:
     files = sorted((RESULTS_DIR / "test").glob("m6_test_*.json"))
     if not files:
         return []
-    return [
-        "## Test set (M6, used once)",
-        "",
-        *render_report(json.loads(files[-1].read_text())),
-        "",
-    ]
+    record = json.loads(files[-1].read_text())
+    lines = ["## Test set (M6, used once)", "", *render_report(record), ""]
+    analysis = RESULTS_DIR / "test" / f"error_analysis_{record['run_id']}.json"
+    if analysis.exists():
+        ea = json.loads(analysis.read_text())
+        lines += [
+            f"**Error analysis** ({ea['n_sampled']} of {ea['n_wrong_entities_total']} wrong "
+            f"entities of {ea['model']}, sampling seed {ea['sampling_seed']}, read by hand; "
+            "patterns in LOG.md)",
+            "",
+            "| Pattern | Errors | A right | B (same seed) right | In 2+ entity headlines |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for name, p in ea["patterns"].items():
+            lines.append(
+                f"| {name.replace('_', ' ')} | {p['count']} | {p['A_right']} | "
+                f"{p['B_same_seed_right']} | {p['multi_entity']} |"
+            )
+        lines += [
+            f"| **total** | {ea['n_sampled']} | {ea['A_right_total']} | "
+            f"{ea['B_same_seed_right_total']} | |",
+            "",
+        ]
+    return lines
 
 
 def main() -> None:

@@ -243,3 +243,73 @@ inference; the cause has not been profiled.
 - The benchmark record says `git.commit` `91331a8` with `dirty: true`, because the M5 code was not
   yet committed. The commit that adds the record contains exactly the code that produced it.
 - M5 done.
+
+## 2026-10-25 · M6 Final test run (test split used once)
+
+### Session
+
+- Dry run on dev first (`results/dry_run/m6_dev_20261025T164724Z.json`): all 7 models reproduced
+  their recorded dev macro-F1 exactly; A cost $0 (all from cache). Code committed as `5781b9d`.
+- One-time test session `results/test/m6_test_20261025T165028Z.json`: 1,611 headlines, 2,157
+  entities. A, B seeds 1-3 and C seeds 1-3, all predictions saved before any statistic. Every
+  checkpoint SHA-256 was checked. A spent $0.1300 of new API cost ($0.081 per 1,000 headlines, as
+  estimated), with 0 invalid answers. Nothing was rerun.
+- The record says `git: 5781b9d (dirty)`. That is a script bug: `results/test/LOCK` was created
+  before the record's git status was read, and the new untracked LOCK file counted as "dirty". The
+  LOCK itself records `5781b9d` with `dirty: false`, and `src/`, `scripts/`, `tests/` and
+  `configs/` were unchanged from that commit. Not fixed or rerun, since test is used once.
+- A reported 5 "cached" headlines on test: test contains 7 extra copies of identical inputs, and
+  5 of them hit the answer of their first copy within the same session. Nothing came from outside
+  test.
+
+### Results (SPEC.md protocol)
+
+| | B mean ± std [CI] | C mean ± std [CI] | C − B [95% CI] |
+|---|---:|---:|---:|
+| All (1,611) | 0.883 ± 0.002 [0.868, 0.897] | 0.882 ± 0.002 [0.867, 0.896] | −0.0009 [−0.0085, +0.0065] |
+| 2+ entities (426) | 0.879 ± 0.008 [0.852, 0.903] | 0.885 ± 0.005 [0.858, 0.908] | +0.0058 [−0.0053, +0.0169] |
+| Mixed labels (184) | 0.869 ± 0.002 [0.834, 0.903] | 0.874 ± 0.006 [0.839, 0.907] | +0.0051 [−0.0089, +0.0198] |
+
+- Model A: 0.837 [0.820, 0.854]; 2+ entities 0.837; mixed labels 0.882 [0.846, 0.915].
+- McNemar per seed pair (B right/C wrong vs C right/B wrong): seed 1 56 vs 60 (p 0.78), seed 2 61
+  vs 67 (p 0.66), seed 3 62 vs 50 (p 0.30). No significant difference.
+- **Decision (SPEC.md rule): C.** The CI of C − B, [−0.0085, +0.0065], includes zero, and C is
+  cheaper per headline (M5: 2.40 vs 3.78 CPU s / 1k headlines).
+- **Served checkpoint: C seed 1** (best dev macro-F1, chosen by the rule before test); its own test
+  macro-F1 is 0.883 [0.867, 0.898]. This is not the headline number.
+- Reading: B and C are statistically indistinguishable in accuracy; C gives that accuracy for about
+  37% less CPU. B and C are about 4.5 points above the zero-shot LLM overall. On mixed-label
+  headlines the LLM (0.882) is level with or above B and C (0.869 / 0.874; CIs overlap), the one
+  place it matches them. C is nominally ahead of B on the multi-entity and mixed-label subsets on
+  test, the opposite of dev; both differences are well inside their CIs, so the honest reading is
+  "no difference". Test scores are slightly above dev for every model.
+
+### Error analysis (40 of C seed 1's 252 wrong test entities, sampling seed 0, read by hand)
+
+`results/test/error_analysis_m6_test_20261025T165028Z.json` has the pattern of every sampled error
+(headline IDs only; the texts stay in the gitignored `results/test/private/`).
+
+| Pattern | Errors | A right | B seed 1 right |
+|---|---:|---:|---:|
+| Neutral vs polar boundary: hedged, advisory or forecast language where both readings are defensible ("avoid long bets", "short ... with stoploss", "signs of life") | 15 | 1 | 0 |
+| Likely annotation error: all models agree against the gold label ("rallies 14%" labelled negative) | 3 | 0 | 0 |
+| Missed implicit or jargon-coded sentiment ("snaps 18%", "overweight", "defreeze accounts", "recommend sell", "withdraws IPO prospectus") | 10 | 9 | 2 |
+| Negation or composition ("not bleak", "bearishness ebbs", "improvement required", "no serious corrections") | 5 | 3 | 2 |
+| Comparative or target confusion ("prefer X over Y", "weaker yen helps Nikkei") | 5 | 5 | 1 |
+| Spurious polarity from a topic word ("chart check", "court order on bail plea") | 2 | 2 | 1 |
+| **Total** | **40** | **20** | **6** |
+
+- Gold → predicted: neutral→negative 10, negative→neutral 8, neutral→positive 7,
+  positive→neutral 5, positive→negative 5, negative→positive 5. 25 of the 40 errors involve the
+  neutral class.
+- **18 of 40 (45%)** errors sit on the neutral/polar boundary or look like annotation errors. Here
+  the zero-shot LLM is right only 1 time in 18, so the fine-tuned models' advantage over A largely
+  comes from learning SEntFiN's labelling conventions for neutral.
+- On the other **22**, the LLM is right **19** times: finance jargon and implied consequences (9 of
+  10) and comparative or two-entity headlines (5 of 5). These are world-knowledge and reasoning
+  gaps of a small encoder trained on about 10k entities, not span or pooling bugs.
+- B seed 1 gets only 6 of C seed 1's 40 errors right: B and C mostly fail on the same entities, so
+  the errors come from the shared encoder and the data, not the architecture.
+- All 5 comparative/target confusions are in 2+ entity headlines. Single-pass pooling did not
+  remove that failure mode.
+- M6 done. Any later change to models or data is reported as a new, clearly labelled run.
