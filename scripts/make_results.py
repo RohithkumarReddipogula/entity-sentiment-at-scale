@@ -7,6 +7,7 @@ import statistics
 from typing import Any
 
 from entsent.data import REPO_ROOT
+from entsent.evaluation import render_report
 from entsent.results import RESULTS_DIR, load_results
 
 RESULTS_MD = REPO_ROOT / "RESULTS.md"
@@ -145,6 +146,19 @@ def speed_section() -> list[str]:
     return lines
 
 
+def test_section() -> list[str]:
+    """M6: the one-time test run, rendered from its record (absent until M6)."""
+    files = sorted((RESULTS_DIR / "test").glob("m6_test_*.json"))
+    if not files:
+        return []
+    return [
+        "## Test set (M6, used once)",
+        "",
+        *render_report(json.loads(files[-1].read_text())),
+        "",
+    ]
+
+
 def main() -> None:
     records = load_results()
     header = (
@@ -161,6 +175,7 @@ def main() -> None:
         "Smoke runs check plumbing on a few train headlines; they are not evaluations.",
         "LLM latency is a network round trip and is not comparable to local CPU latency.",
         "",
+        *test_section(),
         *(line for section in SECTIONS for line in multi_seed(records, *section)),
         *speed_section(),
         "## All runs",

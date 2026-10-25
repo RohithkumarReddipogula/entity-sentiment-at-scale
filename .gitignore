@@ -16,8 +16,9 @@ __pycache__/
 # os
 .DS_Store
 
-# llm response cache (contains headline text)
+# llm response cache and error-analysis samples (contain headline text)
 results/cache/
+results/*/private/
 
 # hugging face model cache (HF_HOME) and trained weights (> 50 MB)
 .cache/
