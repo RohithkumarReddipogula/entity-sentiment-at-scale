@@ -1,0 +1,20 @@
+# M4 final model C (single-pass encoder with mention pooling). Identical to b_final.yaml
+# except `name` and `architecture` (enforced by a test). batch_size counts headlines here,
+# entities for model B. Trained with seeds 1, 2, 3 on CPU (deterministic).
+name: c_final
+architecture: single_pass
+encoder:
+  name: distilbert/distilroberta-base  # Apache-2.0
+  revision: fb53ab8802853c8e4fbdbcd0529f21fc6f459b2b
+max_length: 128
+optim:
+  epochs: 3
+  batch_size: 32
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  dropout: 0.1
+seed: 1
+device: cpu
+save_checkpoint: true

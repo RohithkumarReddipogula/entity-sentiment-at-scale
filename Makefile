@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment
 
 SEEDS ?= 1 2 3
 
@@ -42,6 +42,19 @@ train-b:
 	done; \
 	uv run python scripts/make_results.py; \
 	exit $$rc
+
+# M4: final model C, seeds 1-3, deterministic on CPU, checkpoints saved (dev only).
+train-c:
+	rc=0; \
+	for seed in $(SEEDS); do \
+		uv run python scripts/train.py --config configs/c_final.yaml --seed $$seed \
+			--purpose final || { echo "FAILED: c_final seed $$seed"; rc=1; }; \
+	done; \
+	uv run python scripts/make_results.py; \
+	exit $$rc
+
+alignment:
+	uv run python scripts/check_alignment.py
 
 # Every run is attempted; RESULTS.md is regenerated even if one fails, then make fails.
 check-encoders:

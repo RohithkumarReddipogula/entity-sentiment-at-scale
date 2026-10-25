@@ -155,3 +155,46 @@ inference; the cause has not been profiled.
   the original seed-1 run, which had been trained from uncommitted code. Its duplicate checkpoint
   was removed with the owner's approval, so that record's `checkpoint.path` no longer exists; its
   SHA-256 still documents the match.
+
+## 2026-10-25 · M4 Model C
+
+- Design, approved before building: the plain headline with no markers, encoded once. Each
+  entity's vector is the mean of each mention's token vectors, then the mean across its mentions.
+  The dropout+linear head is the same as model B's. `configs/c_final.yaml` differs from `b_final.yaml`
+  only in `name` and `architecture` (enforced by a test). Seeds 1-3, deterministic on CPU,
+  checkpoints saved.
+- **Batch-size difference (kept on purpose):** `batch_size: 32` counts model inputs. For B that
+  is 32 entities, for C 32 headlines (about 1.34 entities each). So C takes 236 optimizer steps
+  per epoch against B's 316, and each C step covers more entities. This follows from keeping the
+  settings literally identical.
+- Span -> token alignment: tokens whose fast-tokenizer character offsets overlap the mention.
+  Special and padding tokens are never selected. A mention with no token, or a headline over
+  max_length, raises an error.
+- `scripts/check_alignment.py` on train + dev (9,142 headlines, 12,253 mentions; test not read):
+  - 99.61% of mentions align exactly to token boundaries. In 0.39% (48) a token runs past the
+    mention, mostly dropped-apostrophe suffixes ("Sebis", "Air Indias", "PSBs").
+  - About 7 of those 48 come from annotation errors in SEntFiN: truncated names ("Alibab",
+    "Karur Vysya Ban", "Australi", "G" -> "Gold"), "rupee" inside "rupeee", "Euro" inside
+    "European", and "IHFL" inside "IIHFL". The whole token is pooled, which is reasonable. Model B
+    marks the same partial strings.
+  - 4 entity names have leading or trailing whitespace in the data (e.g. " Citigroup"). Alignment
+    ignores the whitespace. The data is left unchanged so model B's inputs stay as trained.
+  - 0 mentions without tokens, 0 tokens shared by two entities, longest headline 35 tokens.
+  - Only 5 entities in train + dev have 2+ mentions, so "mean across mentions" rarely matters.
+- Tests: 104 pass (25 new for model C). They cover hand-written alignment cases with the real
+  tokenizer, coverage and minimality properties over every train + dev mention, pooling weights, a
+  hand-computed pooled vector, independence from padding and batching, loud failures,
+  determinism, the C checkpoint round trip, and a guard that the saved `b_final` seed-1
+  checkpoint still reproduces its recorded dev predictions after the refactor.
+- Results (dev, `results/c_final_s{1,2,3}_*.json`): macro-F1 0.8776 / 0.8759 / 0.8754, mean 0.876
+  (std 0.001), against B's 0.878. 2+ entities: C 0.859, B 0.860. Mixed labels: C 0.837, B 0.844.
+  Every best epoch was 3. Training took about 4.4 min per run on CPU against B's 6.8.
+- Reading: on dev, C is level with B (-0.17 points, well inside each run's CI). The hoped-for gain
+  on multi-entity headlines does not appear; B's explicit entity markers seem to matter at least as
+  much as single-pass context. This is not the decision: it is made on test in M6 with the SPEC.md
+  rule and the M5 cost numbers.
+- CI simulation: a copy of the working tree without `data/raw`, `.cache`, `checkpoints`, `.venv`,
+  `results/cache`, `.env` and `.git`, with a fresh `uv sync --locked`. Lint and mypy pass; the
+  tests give 77 passed, 27 skipped (all the intended data, cache and checkpoint skips), 0 failed.
+  No downloads.
+- M4 done.

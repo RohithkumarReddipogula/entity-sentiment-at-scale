@@ -16,6 +16,7 @@ from entsent.config import TrainConfig
 from entsent.data import REPO_ROOT, Example, sha256_file
 from entsent.metrics import BOOTSTRAP_SEED, N_BOOTSTRAP, evaluate
 from entsent.results import RESULTS_DIR, git_info, new_run_id, write_result
+from entsent.single_pass import MentionPoolingClassifier
 from entsent.training import DTYPE, EntityClassifier, load_pretrained, train
 
 CHECKPOINT_DIR = REPO_ROOT / "checkpoints"
@@ -73,6 +74,7 @@ def run_training(
             "epochs": [asdict(e) for e in outcome.epochs],
             "train_seconds": outcome.train_seconds,
             "n_train_instances": outcome.n_train_instances,
+            "n_train_targets": outcome.n_train_targets,
             "n_parameters": outcome.n_parameters,
             "selection": "best dev macro-F1 over epochs",
         },
@@ -106,7 +108,7 @@ def run_training(
 
 def load_checkpoint(
     path: Path, device: torch.device | None = None
-) -> tuple[EntityClassifier, Any, TrainConfig]:
+) -> tuple[EntityClassifier | MentionPoolingClassifier, Any, TrainConfig]:
     """Rebuild a saved model (encoder config + weights + tokenizer); nothing is downloaded."""
     from transformers import AutoConfig, AutoModel, AutoTokenizer
 
@@ -114,7 +116,8 @@ def load_checkpoint(
     tokenizer = AutoTokenizer.from_pretrained(path / "tokenizer")
     encoder_config = AutoConfig.from_pretrained(path / "encoder")
     encoder = AutoModel.from_config(encoder_config).to(DTYPE)
-    model = EntityClassifier(encoder, encoder_config.hidden_size, cfg.optim.dropout)
+    model_class = EntityClassifier if cfg.architecture == "per_entity" else MentionPoolingClassifier
+    model = model_class(encoder, encoder_config.hidden_size, cfg.optim.dropout)
     state = torch.load(path / "model.pt", map_location="cpu", weights_only=True)
     model.load_state_dict(state)
     model.to(device or torch.device("cpu")).eval()

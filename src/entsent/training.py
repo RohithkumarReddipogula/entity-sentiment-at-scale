@@ -21,6 +21,12 @@ from torch.utils.data import DataLoader, Dataset
 from entsent.config import TrainConfig
 from entsent.data import LABELS, Example
 from entsent.metrics import confusion, scores
+from entsent.single_pass import (
+    HeadlineInstance,
+    MentionPoolingClassifier,
+    make_single_pass_loader,
+    single_pass_instances,
+)
 
 MARKER_OPEN = "[E]"
 MARKER_CLOSE = "[/E]"
@@ -84,10 +90,24 @@ def per_entity_instances(examples: Sequence[Example]) -> list[Instance]:
     ]
 
 
-def build_instances(cfg: TrainConfig, examples: Sequence[Example]) -> list[Instance]:
+AnyInstance = Instance | HeadlineInstance
+
+
+def build_instances(cfg: TrainConfig, examples: Sequence[Example]) -> list[AnyInstance]:
     if cfg.architecture == "per_entity":
-        return per_entity_instances(examples)
-    raise NotImplementedError("single_pass (model C) is implemented in M4")
+        return list(per_entity_instances(examples))
+    return list(single_pass_instances(examples))
+
+
+def targets(instances: Sequence[AnyInstance]) -> list[tuple[int, int]]:
+    """(headline_id, label) per classification target, in the order the model outputs them."""
+    out: list[tuple[int, int]] = []
+    for inst in instances:
+        if isinstance(inst, HeadlineInstance):
+            out += [(inst.headline_id, label) for label in inst.labels]
+        else:
+            out.append((inst.headline_id, inst.label))
+    return out
 
 
 # --- model ----------------------------------------------------------------------------------------
@@ -127,11 +147,20 @@ def load_pretrained(cfg: TrainConfig) -> tuple[Any, nn.Module]:
     return tokenizer, encoder
 
 
-def prepare(tokenizer: Any, encoder: Any, dropout: float) -> EntityClassifier:
-    """Add the entity markers and the head. Fails loudly unless every parameter is float32."""
-    tokenizer.add_special_tokens({"additional_special_tokens": [MARKER_OPEN, MARKER_CLOSE]})
-    encoder.resize_token_embeddings(len(tokenizer))
-    model = EntityClassifier(encoder, encoder.config.hidden_size, dropout)
+def prepare(
+    tokenizer: Any, encoder: Any, dropout: float, architecture: str = "per_entity"
+) -> EntityClassifier | MentionPoolingClassifier:
+    """Add the head (and, for model B, the entity markers). Fails unless all params are float32.
+
+    Model C sees plain headlines, so it gets no marker tokens.
+    """
+    model: EntityClassifier | MentionPoolingClassifier
+    if architecture == "per_entity":
+        tokenizer.add_special_tokens({"additional_special_tokens": [MARKER_OPEN, MARKER_CLOSE]})
+        encoder.resize_token_embeddings(len(tokenizer))
+        model = EntityClassifier(encoder, encoder.config.hidden_size, dropout)
+    else:
+        model = MentionPoolingClassifier(encoder, encoder.config.hidden_size, dropout)
     dtypes = {p.dtype for p in model.parameters()}
     if dtypes != {DTYPE}:
         raise TypeError(f"expected all parameters in {DTYPE}, got {sorted(map(str, dtypes))}")
@@ -159,7 +188,8 @@ class TrainOutcome:
     dev_pred: list[list[str]]
     dev_ids: list[int]
     train_seconds: float
-    n_train_instances: int
+    n_train_instances: int  # model inputs: entities for B, headlines for C
+    n_train_targets: int  # entities classified
     n_parameters: int
     tokenizer: Any = field(repr=False)
     encoder_config: Any = field(repr=False)
@@ -197,26 +227,44 @@ def make_loader(
     )
 
 
-def predict(
-    model: EntityClassifier, loader: DataLoader[Instance], device: torch.device
-) -> list[int]:
+def make_loader_for(
+    cfg: TrainConfig,
+    instances: Sequence[AnyInstance],
+    tokenizer: Any,
+    shuffle: bool,
+    batch_size: int | None = None,
+) -> DataLoader[Any]:
+    """Model B batches entity inputs; model C batches headlines (both use cfg batch_size)."""
+    size = batch_size or cfg.optim.batch_size
+    if cfg.architecture == "per_entity":
+        b_inst = cast("list[Instance]", list(instances))
+        return make_loader(b_inst, tokenizer, cfg.max_length, size, shuffle, cfg.seed)
+    c_inst = cast("list[HeadlineInstance]", list(instances))
+    return make_single_pass_loader(c_inst, tokenizer, cfg.max_length, size, shuffle, cfg.seed)
+
+
+def model_inputs(batch: dict[str, torch.Tensor], device: torch.device) -> dict[str, torch.Tensor]:
+    return {k: v.to(device) for k, v in batch.items() if k != "labels"}
+
+
+def predict(model: nn.Module, loader: DataLoader[Any], device: torch.device) -> list[int]:
     model.eval()
     preds: list[int] = []
     with torch.inference_mode():
         for batch in loader:
-            logits = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
+            logits = model(**model_inputs(batch, device))
             preds += logits.argmax(dim=-1).tolist()
     return preds
 
 
 def group_by_headline(
-    instances: Sequence[Instance], preds: Sequence[int]
+    instances: Sequence[AnyInstance], preds: Sequence[int]
 ) -> tuple[list[int], list[list[str]], list[list[str]]]:
     gold: dict[int, list[str]] = {}
     pred: dict[int, list[str]] = {}
-    for inst, p in zip(instances, preds, strict=True):
-        gold.setdefault(inst.headline_id, []).append(LABELS[inst.label])
-        pred.setdefault(inst.headline_id, []).append(LABELS[p])
+    for (headline_id, label), p in zip(targets(instances), preds, strict=True):
+        gold.setdefault(headline_id, []).append(LABELS[label])
+        pred.setdefault(headline_id, []).append(LABELS[p])
     ids = list(gold)
     return ids, [gold[i] for i in ids], [pred[i] for i in ids]
 
@@ -235,13 +283,13 @@ def train(
 
     set_seed(cfg.seed, device)
     tokenizer, encoder = pretrained(cfg)
-    model = prepare(tokenizer, encoder, cfg.optim.dropout).to(device)
+    model = prepare(tokenizer, encoder, cfg.optim.dropout, cfg.architecture).to(device)
 
     train_inst = build_instances(cfg, train_examples)
     dev_inst = build_instances(cfg, dev_examples)
     o = cfg.optim
-    train_loader = make_loader(train_inst, tokenizer, cfg.max_length, o.batch_size, True, cfg.seed)
-    dev_loader = make_loader(dev_inst, tokenizer, cfg.max_length, o.batch_size, False, cfg.seed)
+    train_loader = make_loader_for(cfg, train_inst, tokenizer, shuffle=True)
+    dev_loader = make_loader_for(cfg, dev_inst, tokenizer, shuffle=False)
 
     no_decay = ("bias", "LayerNorm.weight", "layer_norm.weight")
     groups = [
@@ -270,7 +318,7 @@ def train(
         start = time.perf_counter()
         total_loss, n_batches = 0.0, 0
         for batch in train_loader:
-            logits = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
+            logits = model(**model_inputs(batch, device))
             loss = loss_fn(logits, batch["labels"].to(device))
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), o.max_grad_norm)
@@ -315,6 +363,7 @@ def train(
         dev_ids=ids,
         train_seconds=train_seconds,
         n_train_instances=len(train_inst),
+        n_train_targets=len(targets(train_inst)),
         n_parameters=sum(p.numel() for p in model.parameters()),
         tokenizer=tokenizer,
         encoder_config=model.encoder.config,

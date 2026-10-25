@@ -1,0 +1,183 @@
+{
+  "run_id": "c_final_s3_20261025T161004Z",
+  "timestamp": "2026-10-25T16:10:04+00:00",
+  "model_id": "C",
+  "model_name": "Single-pass encoder",
+  "purpose": "final",
+  "split": "dev",
+  "n_headlines": 1613,
+  "n_entities": 2150,
+  "git": {
+    "commit": "6561d3b8a47666451ba92c20537f1e83dd596245",
+    "dirty": true
+  },
+  "config_path": "configs/c_final.yaml",
+  "config": {
+    "name": "c_final",
+    "architecture": "single_pass",
+    "encoder": {
+      "name": "distilbert/distilroberta-base",
+      "revision": "fb53ab8802853c8e4fbdbcd0529f21fc6f459b2b"
+    },
+    "max_length": 128,
+    "optim": {
+      "epochs": 3,
+      "batch_size": 32,
+      "lr": 3e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "max_grad_norm": 1.0,
+      "dropout": 0.1
+    },
+    "seed": 3,
+    "device": "cpu",
+    "save_checkpoint": true
+  },
+  "seed": {
+    "train": 3,
+    "bootstrap": 0,
+    "n_bootstrap": 10000
+  },
+  "environment": {
+    "device": "cpu",
+    "torch": "2.14.1",
+    "python": "3.12.15",
+    "machine": "arm64",
+    "deterministic": true,
+    "dtype": "torch.float32"
+  },
+  "training": {
+    "best_epoch": 3,
+    "epochs": [
+      {
+        "epoch": 1,
+        "train_loss": 0.6461342446253462,
+        "dev_macro_f1": 0.8624489983579058,
+        "dev_accuracy": 0.8613953488372093,
+        "train_seconds": 94.76559075000023,
+        "eval_seconds": 3.5983052910005426
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.30818410778134053,
+        "dev_macro_f1": 0.8680037521592677,
+        "dev_accuracy": 0.8683720930232558,
+        "train_seconds": 95.45915412500017,
+        "eval_seconds": 3.6232715830001325
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.21262117686791945,
+        "dev_macro_f1": 0.8754041991225714,
+        "dev_accuracy": 0.8753488372093023,
+        "train_seconds": 95.6027263750002,
+        "eval_seconds": 3.582859500000268
+      }
+    ],
+    "train_seconds": 285.8274712500006,
+    "n_train_instances": 7529,
+    "n_train_targets": 10098,
+    "n_parameters": 82120707,
+    "selection": "best dev macro-F1 over epochs"
+  },
+  "metrics": {
+    "all": {
+      "macro_f1": 0.8754041991225714,
+      "accuracy": 0.8753488372093023,
+      "n_entities": 2150,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.9027027027027027,
+          "recall": 0.8789473684210526,
+          "f1": 0.8906666666666667,
+          "support": 760
+        },
+        "negative": {
+          "precision": 0.8525963149078727,
+          "recall": 0.8914185639229422,
+          "f1": 0.8715753424657534,
+          "support": 571
+        },
+        "neutral": {
+          "precision": 0.8671586715867159,
+          "recall": 0.8608058608058609,
+          "f1": 0.8639705882352942,
+          "support": 819
+        }
+      },
+      "n_headlines": 1613,
+      "macro_f1_ci95": [
+        0.8589655120875027,
+        0.8910403616507582
+      ]
+    },
+    "multi_entity": {
+      "macro_f1": 0.8582468528049194,
+      "accuracy": 0.8638253638253638,
+      "n_entities": 962,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.9003115264797508,
+          "recall": 0.8678678678678678,
+          "f1": 0.8837920489296636,
+          "support": 333
+        },
+        "negative": {
+          "precision": 0.7863247863247863,
+          "recall": 0.8518518518518519,
+          "f1": 0.8177777777777778,
+          "support": 216
+        },
+        "neutral": {
+          "precision": 0.8796068796068796,
+          "recall": 0.8668280871670703,
+          "f1": 0.8731707317073171,
+          "support": 413
+        }
+      },
+      "n_headlines": 425,
+      "macro_f1_ci95": [
+        0.8279120691747784,
+        0.8851941422168661
+      ]
+    },
+    "mixed_label": {
+      "macro_f1": 0.8348547066670154,
+      "accuracy": 0.837772397094431,
+      "n_entities": 413,
+      "n_invalid": 0,
+      "per_class": {
+        "positive": {
+          "precision": 0.8992248062015504,
+          "recall": 0.8111888111888111,
+          "f1": 0.8529411764705882,
+          "support": 143
+        },
+        "negative": {
+          "precision": 0.8,
+          "recall": 0.8155339805825242,
+          "f1": 0.8076923076923077,
+          "support": 103
+        },
+        "neutral": {
+          "precision": 0.8156424581005587,
+          "recall": 0.874251497005988,
+          "f1": 0.8439306358381503,
+          "support": 167
+        }
+      },
+      "n_headlines": 184,
+      "macro_f1_ci95": [
+        0.795260058135273,
+        0.8716894520365827
+      ]
+    }
+  },
+  "checkpoint": {
+    "path": "checkpoints/c_final_s3_20261025T161004Z",
+    "model_sha256": "f3a4a3cc7d2b470d7d1c942472f5b55ba2c7b7746bfaff82ee59c31be27e1b7b",
+    "epoch": 3
+  }
+}

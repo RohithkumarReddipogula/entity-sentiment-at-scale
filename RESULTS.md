@@ -12,6 +12,7 @@ Dev scores use best-epoch selection on dev, so they are slightly optimistic. Tes
 | Config | Encoder | Seeds | Dev macro-F1 per seed | Mean | Std | Best epochs | Train time per run (min) |
 |---|---|---|---|---:|---:|---|---:|
 | `b_final` | distilbert/distilroberta-base | 1, 2, 3 | 0.878, 0.877, 0.879 | 0.878 | 0.001 | 3, 3, 3 | 6.8 |
+| `c_final` | distilbert/distilroberta-base | 1, 2, 3 | 0.878, 0.876, 0.875 | 0.876 | 0.001 | 3, 3, 3 | 4.4 |
 
 ## Encoder check (M2, dev, model B)
 
@@ -38,3 +39,6 @@ Rule (LOG.md, fixed before training): choose deberta-v3-small only if its mean d
 | `b_final_s2_20261025T150136Z` | B | final | dev | 1,613 / 2,150 | 0.877 [0.861, 0.892] | 0.876 | 0.863 [0.833, 0.890] | 0.848 [0.808, 0.885] |  |  |  |  |
 | `b_final_s3_20261025T150839Z` | B | final | dev | 1,613 / 2,150 | 0.879 [0.863, 0.895] | 0.879 | 0.857 [0.826, 0.885] | 0.840 [0.798, 0.879] |  |  |  |  |
 | `b_final_s1_20261025T152030Z` | B | repro_check | dev | 1,613 / 2,150 | 0.878 [0.863, 0.894] | 0.878 | 0.861 [0.832, 0.888] | 0.844 [0.804, 0.881] |  |  |  |  |
+| `c_final_s1_20261025T160107Z` | C | final | dev | 1,613 / 2,150 | 0.878 [0.861, 0.893] | 0.878 | 0.860 [0.829, 0.888] | 0.846 [0.807, 0.883] |  |  |  |  |
+| `c_final_s2_20261025T160517Z` | C | final | dev | 1,613 / 2,150 | 0.876 [0.859, 0.891] | 0.876 | 0.860 [0.830, 0.887] | 0.830 [0.788, 0.868] |  |  |  |  |
+| `c_final_s3_20261025T161004Z` | C | final | dev | 1,613 / 2,150 | 0.875 [0.859, 0.891] | 0.875 | 0.858 [0.828, 0.885] | 0.835 [0.795, 0.872] |  |  |  |  |

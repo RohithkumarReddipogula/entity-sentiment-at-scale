@@ -196,9 +196,9 @@ def test_one_instance_per_entity_marking_first_mention() -> None:
     assert (inst.headline_id, inst.entity_index, inst.label) == (9, 0, 0)
 
 
-def test_single_pass_not_built_yet() -> None:
-    with pytest.raises(NotImplementedError):
-        build_instances(tiny_cfg(architecture="single_pass"), TRAIN)
+def test_single_pass_builds_one_instance_per_headline() -> None:
+    instances = build_instances(tiny_cfg(architecture="single_pass"), TRAIN)
+    assert len(instances) == len(TRAIN)
 
 
 @pytest.mark.skipif(not RAW_PATH.exists(), reason="run `make data` first")
