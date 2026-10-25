@@ -62,10 +62,12 @@ def render_events(events: Sequence[CleaningEvent]) -> str:
     out = (
         f"Repaired: {counts['repaired']}, dropped: {counts['dropped']}, "
         f"parsed with regex fallback: {counts['parsed_with_fallback']}.\n\n"
-        "| ID | Action | Original | Result | Headline |\n|---:|---|---|---|---|\n"
+        "Headline text is not shown (publishers own it); the ID is the `S No.` in the raw file.\n\n"
+        "| ID | Action | Original | Result |\n|---:|---|---|---|\n"
     )
     for e in sorted(events, key=lambda e: (e.action, e.id)):
-        cells = [str(e.id), e.action, e.original, e.result, e.text]
+        original = "(the whole headline)" if e.original == e.text else e.original
+        cells = [str(e.id), e.action, original, e.result]
         out += "| " + " | ".join(c.replace("|", "\\|") for c in cells) + " |\n"
     return out
 

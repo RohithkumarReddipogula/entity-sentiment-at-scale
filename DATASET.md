@@ -86,38 +86,40 @@ The loader is `src/entsent/data.py`. Every change it makes is listed in the clea
 <!-- BEGIN GENERATED: cleaning -->
 Repaired: 19, dropped: 0, parsed with regex fallback: 13.
 
-| ID | Action | Original | Result | Headline |
-|---:|---|---|---|---|
-| 3615 | parsed_with_fallback | {'Sebi': 'neutral', 'Osian's Art Fund': 'neutral'} | {'Sebi': 'neutral', "Osian's Art Fund": 'neutral'} | (headline text removed) |
-| 3783 | parsed_with_fallback | {'Tata Steel UK': 'negative', 'Moody's': 'neutral'} | {'Tata Steel UK': 'negative', "Moody's": 'neutral'} | (headline text removed) |
-| 4909 | parsed_with_fallback | {'Sun Pharma': 'positive', 'Dr Reddy's Labs': 'positive'} | {'Sun Pharma': 'positive', "Dr Reddy's Labs": 'positive'} | (headline text removed) |
-| 5014 | parsed_with_fallback | {'Sun Pharma': 'positive', 'Dr. Reddy's': 'positive'} | {'Sun Pharma': 'positive', "Dr. Reddy's": 'positive'} | (headline text removed) |
-| 5321 | parsed_with_fallback | {'IOC': 'negative', 'BPCL': 'negative', 'HPCL': 'negative', 'Moody's': 'neutral'} | {'IOC': 'negative', 'BPCL': 'negative', 'HPCL': 'negative', "Moody's": 'neutral'} | (headline text removed) |
-| 7226 | parsed_with_fallback | {'BP': 'positive', 'Britain's FTSE': 'positive'} | {'BP': 'positive', "Britain's FTSE": 'positive'} | (headline text removed) |
-| 8167 | parsed_with_fallback | {'Nikkei': 'positive', 'BOJ': 'neutral', 'Moody's': 'neutral'} | {'Nikkei': 'positive', 'BOJ': 'neutral', "Moody's": 'neutral'} | (headline text removed) |
-| 8202 | parsed_with_fallback | {'Samsung': 'positive', 'Barron's': 'neutral'} | {'Samsung': 'positive', "Barron's": 'neutral'} | (headline text removed) |
-| 9624 | parsed_with_fallback | {'Citic Securities': 'negative', 'China's central bank': 'neutral'} | {'Citic Securities': 'negative', "China's central bank": 'neutral'} | (headline text removed) |
-| 9824 | parsed_with_fallback | {'Diageo': 'negative', 'BAE': 'negative', 'UK's FTSE': 'negative'} | {'Diageo': 'negative', 'BAE': 'negative', "UK's FTSE": 'negative'} | (headline text removed) |
-| 10269 | parsed_with_fallback | {'Sun Pharma': 'negative', 'Dr Reddy's Laboratories': 'negative'} | {'Sun Pharma': 'negative', "Dr Reddy's Laboratories": 'negative'} | (headline text removed) |
-| 10355 | parsed_with_fallback | {'Axis Bank': 'positive', 'HDFC Bank': 'positive', 'ICICI Bank': 'positive', 'Moody's': 'neutral'} | {'Axis Bank': 'positive', 'HDFC Bank': 'positive', 'ICICI Bank': 'positive', "Moody's": 'neutral'} | (headline text removed) |
-| 10621 | parsed_with_fallback | {'Ranbaxy': 'positive', 'Dr. Reddy's': 'positive', 'Cadila': 'positive', 'HSBC': 'neutral'} | {'Ranbaxy': 'positive', "Dr. Reddy's": 'positive', 'Cadila': 'positive', 'HSBC': 'neutral'} | (headline text removed) |
-| 305 | repaired | L&T Finance neutralings | L&T Finance Holdings | (headline text removed) |
-| 1087 | repaired | Alibaba Group neutraling Inc | Alibaba Group Holding Inc | (headline text removed) |
-| 1385 | repaired | Frank Rusnegative Company | Frank Russell Company | (headline text removed) |
-| 2009 | repaired | IIFL neutralings | IIFL Holdings | (headline text removed) |
-| 2099 | repaired | Bajaj neutralings | Bajaj Holdings | (headline text removed) |
-| 2508 | repaired | Bajaj neutralings | Bajaj Holdings | (headline text removed) |
-| 3652 | repaired | Avantha neutralings | Avantha Holdings | (headline text removed) |
-| 4179 | repaired | Deccan Chronicle neutralings | Deccan Chronicle Holdings | (headline text removed) |
-| 4180 | repaired | Deccan Chronicle neutralings | Deccan Chronicle Holdings | (headline text removed) |
-| 4389 | repaired | Deccan Chronicle neutralings Limited | Deccan Chronicle Holdings Limited | (headline text removed) |
-| 4550 | repaired | Avantha neutralings | Avantha Holdings | (headline text removed) |
-| 5953 | repaired | WNS neutralings | WNS Holdings | (headline text removed) |
-| 6656 | repaired | New Crystal Material neutralings | New Crystal Material Holdings | (headline text removed) |
-| 6788 | repaired | FTSE Rusnegative | FTSE Russell | (headline text removed) |
-| 7563 | repaired | FTSE-Rusnegative | FTSE-Russell | (headline text removed) |
-| 8169 | repaired | Nomura neutralings Inc | Nomura Holdings Inc | (headline text removed) |
-| 8251 | repaired | United Breweries neutralings | United Breweries Holdings | (headline text removed) |
-| 8397 | repaired | Rane neutralings | Rane Holdings | (headline text removed) |
-| 9277 | repaired | HSBC neutralings | HSBC Holdings | (headline text removed) |
+Headline text is not shown (publishers own it); the ID is the `S No.` in the raw file.
+
+| ID | Action | Original | Result |
+|---:|---|---|---|
+| 3615 | parsed_with_fallback | {'Sebi': 'neutral', 'Osian's Art Fund': 'neutral'} | {'Sebi': 'neutral', "Osian's Art Fund": 'neutral'} |
+| 3783 | parsed_with_fallback | {'Tata Steel UK': 'negative', 'Moody's': 'neutral'} | {'Tata Steel UK': 'negative', "Moody's": 'neutral'} |
+| 4909 | parsed_with_fallback | {'Sun Pharma': 'positive', 'Dr Reddy's Labs': 'positive'} | {'Sun Pharma': 'positive', "Dr Reddy's Labs": 'positive'} |
+| 5014 | parsed_with_fallback | {'Sun Pharma': 'positive', 'Dr. Reddy's': 'positive'} | {'Sun Pharma': 'positive', "Dr. Reddy's": 'positive'} |
+| 5321 | parsed_with_fallback | {'IOC': 'negative', 'BPCL': 'negative', 'HPCL': 'negative', 'Moody's': 'neutral'} | {'IOC': 'negative', 'BPCL': 'negative', 'HPCL': 'negative', "Moody's": 'neutral'} |
+| 7226 | parsed_with_fallback | {'BP': 'positive', 'Britain's FTSE': 'positive'} | {'BP': 'positive', "Britain's FTSE": 'positive'} |
+| 8167 | parsed_with_fallback | {'Nikkei': 'positive', 'BOJ': 'neutral', 'Moody's': 'neutral'} | {'Nikkei': 'positive', 'BOJ': 'neutral', "Moody's": 'neutral'} |
+| 8202 | parsed_with_fallback | {'Samsung': 'positive', 'Barron's': 'neutral'} | {'Samsung': 'positive', "Barron's": 'neutral'} |
+| 9624 | parsed_with_fallback | {'Citic Securities': 'negative', 'China's central bank': 'neutral'} | {'Citic Securities': 'negative', "China's central bank": 'neutral'} |
+| 9824 | parsed_with_fallback | {'Diageo': 'negative', 'BAE': 'negative', 'UK's FTSE': 'negative'} | {'Diageo': 'negative', 'BAE': 'negative', "UK's FTSE": 'negative'} |
+| 10269 | parsed_with_fallback | {'Sun Pharma': 'negative', 'Dr Reddy's Laboratories': 'negative'} | {'Sun Pharma': 'negative', "Dr Reddy's Laboratories": 'negative'} |
+| 10355 | parsed_with_fallback | {'Axis Bank': 'positive', 'HDFC Bank': 'positive', 'ICICI Bank': 'positive', 'Moody's': 'neutral'} | {'Axis Bank': 'positive', 'HDFC Bank': 'positive', 'ICICI Bank': 'positive', "Moody's": 'neutral'} |
+| 10621 | parsed_with_fallback | {'Ranbaxy': 'positive', 'Dr. Reddy's': 'positive', 'Cadila': 'positive', 'HSBC': 'neutral'} | {'Ranbaxy': 'positive', "Dr. Reddy's": 'positive', 'Cadila': 'positive', 'HSBC': 'neutral'} |
+| 305 | repaired | L&T Finance neutralings | L&T Finance Holdings |
+| 1087 | repaired | Alibaba Group neutraling Inc | Alibaba Group Holding Inc |
+| 1385 | repaired | Frank Rusnegative Company | Frank Russell Company |
+| 2009 | repaired | IIFL neutralings | IIFL Holdings |
+| 2099 | repaired | Bajaj neutralings | Bajaj Holdings |
+| 2508 | repaired | Bajaj neutralings | Bajaj Holdings |
+| 3652 | repaired | Avantha neutralings | Avantha Holdings |
+| 4179 | repaired | Deccan Chronicle neutralings | Deccan Chronicle Holdings |
+| 4180 | repaired | Deccan Chronicle neutralings | Deccan Chronicle Holdings |
+| 4389 | repaired | Deccan Chronicle neutralings Limited | Deccan Chronicle Holdings Limited |
+| 4550 | repaired | Avantha neutralings | Avantha Holdings |
+| 5953 | repaired | WNS neutralings | WNS Holdings |
+| 6656 | repaired | New Crystal Material neutralings | New Crystal Material Holdings |
+| 6788 | repaired | FTSE Rusnegative | FTSE Russell |
+| 7563 | repaired | FTSE-Rusnegative | FTSE-Russell |
+| 8169 | repaired | Nomura neutralings Inc | Nomura Holdings Inc |
+| 8251 | repaired | United Breweries neutralings | United Breweries Holdings |
+| 8397 | repaired | Rane neutralings | Rane Holdings |
+| 9277 | repaired | HSBC neutralings | HSBC Holdings |
 <!-- END GENERATED: cleaning -->

@@ -206,8 +206,9 @@ EXACT_CASES = [
     ("Orion Labs and Dr. Reddy's lead the drug stocks", "Dr. Reddy's"),  # abbreviation
     ("Rupee at ₹83.2 as RBI steps in", "RBI"),  # non-ASCII before the mention
     ("\u2018Nifty\u2019 ends higher on IT gains", "Nifty"),  # curly quotes around the mention
-    ("Auto, Pharma slip; Orion Motors, Sun Pharma lose ground", "Sun Pharma"),
+    ("Auto, Pharma slip; Orion Motors, Sun Pharma lose ground", "Sun Pharma"),  # nested names
 ]
+# All test headlines are made up (checked against SEntFiN); no dataset text is in the repo.
 
 
 @needs_cache
