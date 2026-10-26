@@ -5,6 +5,10 @@ whether the news is positive, negative or neutral for each entity. I fine-tuned 
 two ways, compared both with a zero-shot LLM on accuracy and cost, and serve the cheaper one
 behind an API.
 
+**Live demo:** <https://entity-sentiment-at-scale-production.up.railway.app>. Type a headline and
+the entity names, and see each entity's label and confidence. It runs on Railway and can sleep
+when idle, so the first request after a quiet period may take a few seconds.
+
 ## Results
 
 <!-- BEGIN GENERATED: results -->

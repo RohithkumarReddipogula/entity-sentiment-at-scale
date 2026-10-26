@@ -363,7 +363,7 @@ inference; the cause has not been profiled.
   this setup. Not measured: x86-64 Linux (Intel MKL), which would behave differently again.
 - M7 done.
 
-## 2026-10-25 · M8 Polish (in progress)
+## 2026-10-25 · M8 Polish
 
 - Citations checked on the web before writing them. The Meltwater post is "Doing More With Less:
   Rethinking Entity-Level Sentiment at Scale" (Tawhid, Schulte, Vardhan, Marton, Komban), Meltwater
@@ -430,3 +430,69 @@ inference; the cause has not been profiled.
 | `afea6ad` | `8046ef6` | M7 |
 | `775a4ac` | `1ac82e7` | M8 |
 | `af8f390` | `bba3c91` | Remove SEntFiN headline text |
+
+- Published: https://github.com/RohithkumarReddipogula/entity-sentiment-at-scale (public, branch
+  `main`). The first CI run passed: lint, mypy, 128 passed, 28 skipped.
+- M8 done.
+
+## 2026-10-26 · M9 Deployment on Railway
+
+- **Live:** https://entity-sentiment-at-scale-production.up.railway.app
+- **Release** `model-c-s1-v1`: the served checkpoint (C seed 1, run
+  `c_final_s1_20261025T160107Z`) as `c_final_s1_20261025T160107Z.tar.gz`, 305,458,890 bytes, holding
+  `model.pt`, `config.json`, `tokenizer/` and `encoder/`.
+  - **Archive SHA-256:** `72b9a9758f047085869cebd1a30a149e56cd71cd15370e2207cccca37a7b31eb`
+  - **`model.pt` SHA-256:** `563bca8e924b6317cc8d4c6e721f2b3df171f447fb18cf63e8e21ea5bbe723ca`
+    (matches the run record)
+
+  Both are recorded in `deploy/model.json`. A copy downloaded from the public URL had the same
+  archive SHA-256.
+- **Docker build:** `docker/fetch_model.py` downloads the archive from the release, checks the
+  archive SHA-256, unpacks it with Python's safe `data` filter, and checks the `model.pt` SHA-256.
+  The server checks `model.pt` again at startup (`MODEL_SHA256`). A test keeps the Dockerfile and
+  `deploy/model.json` in sync. Image size: 2.19 GB (1.55 GB plus the weights).
+- **App changes:**
+  - The server listens on `PORT` (Railway sets it), and the Docker HEALTHCHECK follows it.
+  - New `POST /predict_text` takes entity names and finds the spans with the training rules.
+  - A web page at `/` uses it: plain HTML, no outside resources, `textContent` only, and a strict
+    Content-Security-Policy.
+  - The page's example is a made-up headline the model labels correctly ("Orion Foods beats
+    estimates; Acme Foods to report results on Friday": positive 0.994, neutral 0.968). 3 of the
+    5 made-up headlines I tried were all correct. The two misses each called one side of a
+    contrast headline neutral, the known neutral-boundary weakness.
+  - 174 tests pass locally.
+- **No `railway.json`:** Railway's config-as-code is deprecated (files are read only until
+  2026-12-01, and new services may not use them), so the settings were made in the dashboard.
+- **Local check of the deployment image** (OrbStack, `PORT=9000`):
+  - healthy 2.9 s after the container starts
+  - 0 label mismatches on 200 dev headlines, median 22.9 ms per request
+  - 422 for bad input
+- **Memory, measured locally:**
+  - container peak 1,327 MiB, of which 344 MiB is reclaimable file cache
+  - the server's own memory at rest 695 MiB
+  - process peak RSS about 1,076 MiB, during model loading
+  - With a hard 1 GB limit it starts and passes the smoke test with no OOM kill, but the peak
+    sits exactly at the limit, so there is no headroom. Recommended: a 2 GB limit (Railway Hobby).
+- **Railway settings:**
+  - deploy from the GitHub repo, branch `main`, Wait for CI on
+  - healthcheck path `/health`
+  - Serverless (formerly App Sleeping) on
+  - replica memory limit 2 GB
+  - no variables; the API needs no secrets
+- **Live smoke test:**
+  - `/health` reports `c_final_s1` with `model.pt` SHA-256 `563bca8e…`
+  - 0 label mismatches on 200 dev headlines
+  - 422 for bad input
+  - the page is served with its security headers
+  - median round trip 222 ms from my Mac (network and TLS; about 23 ms is the model)
+- **Cold start: not measured.** The app did not go to sleep while idle. My first measurement was
+  interrupted by a visit, and my second failed on my side (a Python without SSL certificates),
+  without any request reaching the app. A direct request 32 minutes after the last visit answered
+  in 0.33 s, so the app was awake. Serverless was already on.
+- **Outbound traffic check:** the deployed image, idle for 3 minutes, sent no packets out of the
+  container (`eth0`: 0 out, 0 in). There are no Hugging Face Hub calls and no telemetry, and the
+  only socket was the server listening. The only traffic was Docker's HEALTHCHECK over loopback,
+  inside the container. So the app does not keep itself awake. It is most likely kept awake by
+  incoming requests to the public URL, for example bots; this was not confirmed.
+- The README says the first request after a quiet period can take a few seconds. That is an
+  expectation, not a measured number.
