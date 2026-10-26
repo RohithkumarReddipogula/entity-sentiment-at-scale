@@ -1,4 +1,4 @@
-.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment bench serve smoke-api docker-reqs docker-build docker-run
+.PHONY: setup data data-check lint typecheck test check run-a-smoke run-a results check-encoders train-b train-c alignment bench serve smoke-api docker-reqs docker-build docker-run fetch-model
 
 SEEDS ?= 1 2 3
 
@@ -81,10 +81,17 @@ docker-reqs:
 docker-build:
 	docker build -t $(IMAGE) .
 
+# M9: the image contains the served model (downloaded and verified at build time).
 docker-run:
-	docker run --rm -p 8000:8000 \
-		-v "$(CURDIR)/checkpoints/$(SERVED):/model:ro" \
-		-e MODEL_SHA256=$(SERVED_SHA) $(IMAGE)
+	docker run --rm -p 8000:8000 $(IMAGE)
+
+# M9: download the served checkpoint from its GitHub Release and verify both SHA-256 values.
+fetch-model:
+	python3 docker/fetch_model.py \
+		"$$(python3 -c "import json; print(json.load(open('deploy/model.json'))['url'])")" \
+		"$$(python3 -c "import json; print(json.load(open('deploy/model.json'))['archive_sha256'])")" \
+		"$$(python3 -c "import json; print(json.load(open('deploy/model.json'))['model_pt_sha256'])")" \
+		checkpoints/$(SERVED)
 
 # Every run is attempted; RESULTS.md is regenerated even if one fails, then make fails.
 check-encoders:

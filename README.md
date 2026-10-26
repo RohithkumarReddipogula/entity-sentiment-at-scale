@@ -28,17 +28,24 @@ files in [`results/`](results/) by `make results`.
 
 ## Run the API
 
-The API serves model C. The trained weights (317 MB) are not in this repository. Train them
-with `make data` and `make train-c` (about 15 minutes on CPU). Training is deterministic on CPU;
-I checked that retraining gives bit-identical weights for model B seed 1. See
-[MODEL_CARD.md](MODEL_CARD.md) for the expected SHA-256.
+The API serves model C. The trained weights (317 MB) are not in the git repository. They are
+attached to the GitHub Release `model-c-s1-v1`, and [deploy/model.json](deploy/model.json)
+records their SHA-256. `make fetch-model` and the Docker build download them and check the
+hashes. You can also train them yourself with `make data` and `make train-c` (about 15 minutes
+on CPU). Training is deterministic on CPU; I checked that retraining gives bit-identical weights
+for model B seed 1.
 
 ```bash
 make setup                   # Python 3.12 environment with uv
-make serve                   # local server on http://127.0.0.1:8000
-# or, with Docker:
+make fetch-model             # download and verify the served weights
+make serve                   # local server with the web page on http://127.0.0.1:8000
+# or, with Docker (the build downloads and verifies the weights):
 make docker-build && make docker-run
 ```
+
+The page at `/` lets you type a headline and entity names and shows each entity's label and
+confidence. It calls `POST /predict_text`, which finds the names in the headline with the same
+rules used to prepare the training data.
 
 ```bash
 curl -s http://127.0.0.1:8000/predict -H 'Content-Type: application/json' -d '{

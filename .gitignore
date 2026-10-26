@@ -23,3 +23,6 @@ results/*/private/
 # hugging face model cache (HF_HOME) and trained weights (> 50 MB)
 .cache/
 checkpoints/
+
+# release archives (M9), uploaded to GitHub Releases, never committed
+dist/

@@ -1,7 +1,9 @@
 # Whitelist: nothing enters the build context unless listed here. This keeps .env, data/raw,
-# checkpoints, caches, results and .git out of the image by construction.
+# checkpoints, dist, caches, results and .git out of the image by construction. The weights come
+# from the GitHub Release (docker/fetch_model.py), not from the build context.
 *
 !docker/requirements-serve.txt
+!docker/fetch_model.py
 !src/
 **/__pycache__
 **/*.pyc

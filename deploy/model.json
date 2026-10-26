@@ -1,0 +1,10 @@
+{
+  "description": "The served checkpoint (model C seed 1), published as a GitHub Release asset. The Docker build downloads it and checks both hashes.",
+  "run_id": "c_final_s1_20261025T160107Z",
+  "release_tag": "model-c-s1-v1",
+  "archive": "c_final_s1_20261025T160107Z.tar.gz",
+  "url": "https://github.com/RohithkumarReddipogula/entity-sentiment-at-scale/releases/download/model-c-s1-v1/c_final_s1_20261025T160107Z.tar.gz",
+  "archive_sha256": "72b9a9758f047085869cebd1a30a149e56cd71cd15370e2207cccca37a7b31eb",
+  "archive_bytes": 305458890,
+  "model_pt_sha256": "563bca8e924b6317cc8d4c6e721f2b3df171f447fb18cf63e8e21ea5bbe723ca"
+}

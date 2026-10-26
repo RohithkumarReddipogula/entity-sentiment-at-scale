@@ -164,6 +164,59 @@ def test_too_many_tokens_is_422_not_500(client: TestClient) -> None:
     assert r.status_code == 422 and "max_length" in r.json()["detail"]
 
 
+# --- M9: names instead of spans, and the web page ------------------------------------------
+
+
+def test_predict_text_matches_predict_with_spans(client: TestClient) -> None:
+    by_names = client.post("/predict_text", json={"text": TEXT, "names": ["nike", "adidas"]})
+    by_spans = client.post("/predict", json=body())
+    assert by_names.status_code == 200
+    assert by_names.json()["entities"] == by_spans.json()["entities"]
+
+
+def test_predict_text_finds_every_mention_with_training_rules(client: TestClient) -> None:
+    text = "acme shares rise while acme corp reports"
+    r = client.post("/predict_text", json={"text": text, "names": ["acme"]})
+    assert r.status_code == 200
+    assert r.json()["entities"][0]["spans"] == [[0, 4], [23, 27]]
+
+
+@pytest.mark.parametrize(
+    ("names", "message"),
+    [
+        (["puma"], "not found in the headline: puma"),
+        (["nike", "Puma", "reebok"], "not found in the headline: Puma, reebok"),
+        (["  ", " "], "no entity names given"),
+        (["nike", ""], "at least 1 character"),
+        ([], "at least 1 item"),
+    ],
+)
+def test_predict_text_rejects_bad_names(client: TestClient, names: list[str], message: str) -> None:
+    r = client.post("/predict_text", json={"text": TEXT, "names": names})
+    assert r.status_code == 422 and message in json.dumps(r.json())
+
+
+def test_predict_text_ignores_duplicate_names(client: TestClient) -> None:
+    r = client.post("/predict_text", json={"text": TEXT, "names": ["nike", " nike ", "adidas"]})
+    assert [e["name"] for e in r.json()["entities"]] == ["nike", "adidas"]
+
+
+def test_page_is_served_with_a_strict_policy(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/html")
+    assert "default-src 'none'" in r.headers["content-security-policy"]
+    assert r.headers["x-content-type-options"] == "nosniff"
+    html = r.text
+    assert '<form id="form">' in html and "/predict_text" in html
+
+
+def test_page_loads_nothing_from_outside_and_never_injects_html(client: TestClient) -> None:
+    html = client.get("/").text
+    assert "innerHTML" not in html and "outerHTML" not in html and "insertAdjacentHTML" not in html
+    assert "<script src" not in html and "<link" not in html and "@import" not in html
+    assert "—" not in html  # no em dashes, same style rule as the docs
+
+
 # --- the serving image installs base + serve only --------------------------------------------
 
 

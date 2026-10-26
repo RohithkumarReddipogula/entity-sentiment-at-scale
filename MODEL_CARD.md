@@ -16,8 +16,15 @@
 
 ## Getting the weights
 
-The weights (317 MB) are not in the repository. Training is deterministic on CPU, so they can be
-rebuilt exactly:
+The weights (317 MB) are not in the git repository. They are attached to the GitHub Release
+`model-c-s1-v1` as `c_final_s1_20261025T160107Z.tar.gz`. [deploy/model.json](deploy/model.json)
+records the SHA-256 of the archive and of `model.pt`, and `make fetch-model` checks both:
+
+```bash
+make setup && make fetch-model
+```
+
+Training is deterministic on CPU, so they can also be rebuilt exactly:
 
 ```bash
 make setup && make data && make train-c

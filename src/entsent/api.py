@@ -1,4 +1,9 @@
-"""M7: FastAPI service for the chosen model (C seed 1): POST /predict and GET /health.
+"""FastAPI service for the chosen model (C seed 1).
+
+  GET  /              a small web page: type a headline and entity names, see the labels (M9)
+  POST /predict       text + entity character spans -> label, confidence, probabilities (M7)
+  POST /predict_text  text + entity names; spans are found with the training rules (M9)
+  GET  /health        200 with the model name and SHA-256, 503 until the model is loaded
 
 Configuration (environment):
   MODEL_DIR      checkpoint folder (model.pt, tokenizer/, encoder/, config.json). Required.
@@ -22,9 +27,10 @@ from typing import Annotated, Any
 
 import torch
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from entsent.data import LABELS, sha256_file
+from entsent.data import LABELS, find_spans, sha256_file
 from entsent.single_pass import HeadlineInstance, collate_single_pass
 
 logger = logging.getLogger("entsent.api")
@@ -182,7 +188,61 @@ def create_app(model_dir: Path | None = None, expected_sha256: str | None = None
         )
         return response
 
+    @app.post("/predict_text", response_model=PredictResponse)
+    def predict_text_endpoint(request: PredictTextRequest) -> PredictResponse:
+        """Entity names instead of spans: spans are found with the training rules (find_spans)."""
+        loaded: LoadedModel | None = state["model"]
+        if loaded is None:
+            raise HTTPException(status_code=503, detail="model not loaded")
+        return predict(loaded, spans_from_names(request))
+
+    @app.get("/", response_class=HTMLResponse)
+    def page() -> HTMLResponse:
+        return HTMLResponse(INDEX_HTML, headers=PAGE_HEADERS)
+
     return app
+
+
+class PredictTextRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=MAX_TEXT_CHARS)
+    names: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        min_length=1, max_length=MAX_ENTITIES
+    )
+
+
+def spans_from_names(request: PredictTextRequest) -> PredictRequest:
+    """Locate each name in the text exactly as the training data was located (M0 rules)."""
+    names = list(dict.fromkeys(n.strip() for n in request.names if n.strip()))
+    if not names:
+        raise HTTPException(status_code=422, detail="no entity names given")
+    found = find_spans(names, request.text)
+    missing = [n for n in names if not found[n]]
+    if missing:
+        raise HTTPException(
+            status_code=422, detail=f"not found in the headline: {', '.join(missing)}"
+        )
+    try:
+        return PredictRequest(
+            text=request.text,
+            entities=[
+                EntityIn(name=n, spans=[list(s) for s in found[n][:MAX_MENTIONS]]) for n in names
+            ],
+        )
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()[0]["msg"]) from exc
+
+
+INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+# The page loads nothing from other origins; its own inline script calls this server only.
+PAGE_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+        "connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+}
 
 
 app = create_app()

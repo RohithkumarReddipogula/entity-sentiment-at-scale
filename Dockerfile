@@ -1,7 +1,21 @@
-# M7: serve model C (single-pass encoder) on CPU. The weights are NOT in the image: mount the
-# checkpoint folder read-only at /model (see `make docker-run`). No .env, data or results are
-# copied in: .dockerignore is a whitelist.
-FROM python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+# Serve model C (single-pass encoder) on CPU, e.g. on Railway.
+# M9: the served checkpoint (C seed 1) is downloaded from its GitHub Release at build time and
+# checked twice: the archive SHA-256 and the model.pt SHA-256 (values in deploy/model.json; a
+# test keeps them in sync). The server checks model.pt again at startup (MODEL_SHA256).
+# No .env, data or results are copied in: .dockerignore is a whitelist.
+ARG BASE=python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+
+# --- stage 1: fetch and verify the weights ---------------------------------------------------
+FROM ${BASE} AS weights
+ARG MODEL_URL=https://github.com/RohithkumarReddipogula/entity-sentiment-at-scale/releases/download/model-c-s1-v1/c_final_s1_20261025T160107Z.tar.gz
+ARG MODEL_ARCHIVE_SHA256=72b9a9758f047085869cebd1a30a149e56cd71cd15370e2207cccca37a7b31eb
+ARG MODEL_PT_SHA256=563bca8e924b6317cc8d4c6e721f2b3df171f447fb18cf63e8e21ea5bbe723ca
+COPY docker/fetch_model.py /fetch_model.py
+RUN python /fetch_model.py "${MODEL_URL}" "${MODEL_ARCHIVE_SHA256}" "${MODEL_PT_SHA256}" /model
+
+# --- stage 2: the server ----------------------------------------------------------------------
+FROM ${BASE}
+ARG MODEL_PT_SHA256=563bca8e924b6317cc8d4c6e721f2b3df171f447fb18cf63e8e21ea5bbe723ca
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -12,7 +26,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TOKENIZERS_PARALLELISM=false \
     TORCH_THREADS=4 \
     WEB_CONCURRENCY=1 \
-    MODEL_DIR=/model
+    MODEL_DIR=/model \
+    MODEL_SHA256=${MODEL_PT_SHA256}
 
 WORKDIR /app
 
@@ -22,17 +37,19 @@ COPY docker/requirements-serve.txt .
 RUN pip install --no-deps -r requirements-serve.txt \
  && pip install --no-deps --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
 
+COPY --from=weights /model /model
 COPY src ./src
 
 RUN useradd --create-home --uid 10001 app
 USER app
 
+# Railway (and similar platforms) set PORT; 8000 when run locally.
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-  CMD python -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"
+  CMD python -c "import os, sys, urllib.request; sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8000\")}/health', timeout=4).status == 200 else 1)"
 
 # Default: 1 worker with 4 torch threads. Measured on an Apple M5 under OrbStack (Linux arm64,
 # OpenBLAS/oneDNN torch): median 22.7 ms per request vs 74 ms with 1 thread. The macOS result
 # from M5 (1 thread most efficient, Accelerate BLAS) does not carry over to this image. Tune
 # TORCH_THREADS and WEB_CONCURRENCY for the target machine.
-CMD ["sh", "-c", "exec uvicorn entsent.api:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY}"]
+CMD ["sh", "-c", "exec uvicorn entsent.api:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY}"]

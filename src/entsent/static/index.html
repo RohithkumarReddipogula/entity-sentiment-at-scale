@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entity sentiment demo</title>
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --bg: #ffffff; --muted: #5f6368; --line: #d0d4d9;
+          --accent: #1a5fb4; --pos: #1e7e34; --neg: #b3261e; --neu: #5f6368; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg: #e8eaed; --bg: #16181c; --muted: #a0a4a9; --line: #3a3f46;
+            --accent: #8ab4f8; --pos: #6fcf86; --neg: #f28b82; --neu: #a0a4a9; }
+  }
+  body { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg);
+         background: var(--bg); max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.lead { color: var(--muted); margin: 0 0 24px; }
+  label { display: block; font-weight: 600; margin: 16px 0 4px; }
+  .hint { color: var(--muted); font-size: 0.875rem; margin: 2px 0 0; }
+  textarea, input { width: 100%; box-sizing: border-box; font: inherit; color: inherit;
+                    background: transparent; border: 1px solid var(--line); border-radius: 6px;
+                    padding: 8px 10px; }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { margin-top: 16px; font: inherit; font-weight: 600; padding: 8px 18px; border: 0;
+           border-radius: 6px; background: var(--accent); color: var(--bg); cursor: pointer; }
+  button:disabled { opacity: 0.6; cursor: wait; }
+  #status { min-height: 1.5em; margin-top: 16px; color: var(--muted); }
+  #status.error { color: var(--neg); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { font-size: 0.875rem; color: var(--muted); font-weight: 600; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .positive { color: var(--pos); font-weight: 600; }
+  .negative { color: var(--neg); font-weight: 600; }
+  .neutral { color: var(--neu); font-weight: 600; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 0.875rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Entity sentiment for financial headlines</h1>
+  <p class="lead">Type a headline and the entities in it. The model says whether the news is
+    positive, negative or neutral for each one.</p>
+
+  <form id="form">
+    <label for="text">Headline</label>
+    <textarea id="text" rows="3" maxlength="1000" required>Nike beats forecasts while Adidas cuts its outlook.</textarea>
+
+    <label for="names">Entities</label>
+    <input id="names" type="text" maxlength="2000" required value="Nike, Adidas">
+    <p class="hint">Separate names with commas. Each name must appear in the headline exactly as typed.</p>
+
+    <button id="go" type="submit">Analyse</button>
+  </form>
+
+  <p id="status" role="status" aria-live="polite"></p>
+  <table id="results" hidden>
+    <thead><tr><th scope="col">Entity</th><th scope="col">Sentiment</th><th scope="col">Confidence</th>
+      <th scope="col">Positive / negative / neutral</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <footer>
+    Model C from <a href="https://github.com/RohithkumarReddipogula/entity-sentiment-at-scale">entity-sentiment-at-scale</a>:
+    distilroberta-base fine-tuned on SEntFiN 1.0 financial headlines. Research demo; not for
+    investment decisions. The first request after a quiet period can take a few seconds while
+    the server wakes up. Headlines you type are not stored.
+  </footer>
+</main>
+<script>
+  const form = document.getElementById("form");
+  const statusEl = document.getElementById("status");
+  const table = document.getElementById("results");
+  const tbody = table.querySelector("tbody");
+  const button = document.getElementById("go");
+
+  function cell(text, className) {
+    const td = document.createElement("td");
+    td.textContent = text;  // textContent only: what the user typed stays plain text
+    if (className) td.className = className;
+    return td;
+  }
+
+  function pct(x) { return (100 * x).toFixed(1) + "%"; }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text = document.getElementById("text").value;
+    const names = document.getElementById("names").value.split(",").map((s) => s.trim()).filter(Boolean);
+    statusEl.className = "";
+    statusEl.textContent = "Working...";
+    button.disabled = true;
+    table.hidden = true;
+    tbody.replaceChildren();
+    try {
+      const response = await fetch("/predict_text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, names }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        const detail = Array.isArray(data.detail) ? data.detail.map((d) => d.msg).join("; ") : data.detail;
+        throw new Error(detail || "Request failed (" + response.status + ")");
+      }
+      for (const e of data.entities) {
+        const row = document.createElement("tr");
+        const p = e.probabilities;
+        row.append(
+          cell(e.name),
+          cell(e.label, e.label),
+          cell(pct(e.confidence), "num"),
+          cell([p.positive, p.negative, p.neutral].map(pct).join(" / "), "num"),
+        );
+        tbody.append(row);
+      }
+      table.hidden = false;
+      statusEl.textContent = "";
+    } catch (err) {
+      statusEl.className = "error";
+      statusEl.textContent = err.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
